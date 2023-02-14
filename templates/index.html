@@ -1,0 +1,34 @@
+<html>
+
+<head>
+    <title>CS50 Project</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <h1>CS50 Project</h1>
+    <p>web tool to create simple visualisation</p>
+
+    <h1>Upload your CSV file:</h1>
+    <form method="POST" action="/" enctype="multipart/form-data">
+        <p><input type="file" name="file"></p>
+        <p><input type="submit" value="Submit"></p>
+    </form>
+    {% if shape %}
+    <p>Shape is {{shape}}</p>
+    {% endif %}
+
+    <div>
+        <table>
+            <h1>
+                {% for table in tables %}
+                <h2>{{titles[loop.index]}}</h2>
+                {{ table|safe }}
+                {% endfor %}
+            </h1>
+        </table>
+    </div>
+
+</body>
+
+</html>
