@@ -1,0 +1,27 @@
+main landing page 
+- description of the web app 
+- upload data file
+
+chart builder page 
+- select x variable 
+    - show various measure calculations
+- select y variable
+- select filter variable 
+    - show sample size of each group after selection in a table format
+- select chart type 
+    - show image of different type of chart
+
+chart design page 
+- show chart with default design 
+- depending on the type of chart, option to change setting 
+    1. line chart 
+        - line color 
+        - line type
+        - line thickness
+    2. scatter plot 
+        - point shape 
+        - point color 
+    3. bar chart 
+        - bar color 
+    4. pie chart 
+        - pie color
