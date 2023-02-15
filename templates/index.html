@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
     <title>CS50 Project</title>
@@ -6,29 +7,38 @@
 </head>
 
 <body>
-    <h1>CS50 Project</h1>
-    <p>web tool to create simple visualisation</p>
-
-    <h1>Upload your CSV file:</h1>
-    <form method="POST" action="/" enctype="multipart/form-data">
-        <p><input type="file" name="file"></p>
-        <p><input type="submit" value="Submit"></p>
-    </form>
-    {% if shape %}
-    <p>Shape is {{shape}}</p>
-    {% endif %}
-
+    <!-- Page content -->
     <div>
-        <table>
-            <h1>
-                {% for table in tables %}
-                <h2>{{titles[loop.index]}}</h2>
-                {{ table|safe }}
-                {% endfor %}
-            </h1>
-        </table>
-    </div>
+        <h1>CS50 Project</h1>
+        <p>web tool to create simple visualization</p>
 
+        <!-- File upload -->
+        <div>
+            {% if success == "initial" or success == "no" %}
+            <h2>Upload your CSV file:</h2>
+            <form method="POST" action="/" enctype="multipart/form-data">
+                <input type="file" name="uploaded-file" accept=".csv">
+                <input type="submit" value="upload file">
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- Success message -->
+        <div>
+            {% if success == "initial" %}
+            <p></p>
+            {% elif success == "yes" %}
+            <p>Data file successfully uploaded</p>
+            <form method="GET" action="/selectvariable">
+                <p>Click the button below to start building your visualization</p>
+                <input type="submit" value="Select Variable">
+            </form>
+            {% else %}
+            <p>Data file upload is unsuccessful.</p>
+            <p>Please check data structure - at least 2 rows and 2 columns</p>
+            {% endif %}
+        </div>
+    </div>
 </body>
 
 </html>

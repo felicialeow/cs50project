@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CS50 Project</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="../static/jquery-3.6.0.js"></script>
+</head>
+
+<body>
+    <!-- Page content -->
+    <div>
+        <h1>Chart Builder</h1>
+        <p>The data has {{shape[0]}} rows and {{shape[1]}} columns.</p>
+
+        <!-- Error Message -->
+        <div>
+            {% if error %}
+            <p>X and Y variables must be different</p>
+            {% else %}
+            <p></p>
+            {% endif %}
+        </div>
+
+        <form method="POST" action="/selectvariable">
+            <!-- X variable -->
+            <div>
+                <label for="xvar">Choose X variable:</label>
+                <select name="xvar" id="xvar">
+                    {% for col in columns %}
+                    <option value={{col}}>{{col}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <script>
+                document.getElementById("xvar").addEventListener("change", function () {
+                    document.getElementById("xvar-chosen").innerHTML = document.getElementById("xvar").value
+                })
+            </script>
+            <!-- X variable measure -->
+            <div>
+                <label for="xmeasure">Choose a measure for <span id="xvar-chosen">X variable</span>:</label>
+                <select name="xmeasure" id="xmeasure">
+                    <option val="mean">Mean</option>
+                    <option val="max">Max</option>
+                    <option val="min">Min</option>
+                    <option val="sum">Sum</option>
+                    <option val="count">Count</option>
+                    <option val="distinct">Distinct Count</option>
+                </select>
+            </div>
+            <!-- Y variable -->
+            <div>
+                <p>Note: The Y variable must be different from the chosen X variable</p>
+                <label for="yvar">Choose Y variable:</label>
+                <select name="yvar" id="yvar">
+                    {% for col in columns %}
+                    <option value={{col}}>{{col}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Preview Data -->
+            <div>
+                <p>Click here to view the summarised data of X and Y</p>
+                <input type="submit" value="Preview Data">
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

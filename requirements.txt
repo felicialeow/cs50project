@@ -1,1 +1,4 @@
 flask
+pandas
+os
+werkzeug.utils
