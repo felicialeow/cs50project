@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CS50 Project</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="../static/jquery-3.6.0.js"></script>
+</head>
+
+<body>
+    <!-- Page content -->
+    <div>
+        <p>The data has {{shape[0]}} rows and {{shape[1]}} columns.</p>
+    </div>
+    <div>
+        <!-- show basic Description table -->
+        <h2>Description for Numerical Variables</h2>
+        <table>
+            {% for table in tables %}
+            {{ table|safe }}
+            {% endfor %}
+        </table>
+
+        <!-- remove variable if not necessary -->
+        <form method="POST" action="/basics">
+            <div>
+                <label for="rvar">Remove variable:</label>
+                <select name="rvar" id="rvar">
+                    <option value="none" selected disabled hidden>Select</option>
+                    {% for col in cols %}
+                    <option value={{col}}>{{col}}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit" value="remove">
+            </div>
+        </form>
+
+        <form method="POST" action="/basics">
+            <input name="reset" type="hidden">
+            <button type="submit">Reset</button>
+        </form>
+
+    </div>
+</body>
+
+</html>
