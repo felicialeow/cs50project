@@ -28,6 +28,9 @@ chart builder page
 - select chart type 
     - show image of different type of chart 
 
+    https://pypi.org/project/Flask-Plots/
+    https://matplotlib.org/stable/gallery/user_interfaces/web_application_server_sgskip.html
+
 chart design page 
 - show chart with default design 
 - depending on the type of chart, option to change setting 
