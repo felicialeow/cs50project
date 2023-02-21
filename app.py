@@ -26,9 +26,8 @@ app.secret_key = "secret"
 
 app.config['flag_1'] = 0
 
+
 # Upload file
-
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
@@ -60,20 +59,17 @@ def basics():
     # store temp file
     tempfile = os.path.join(
         app.config['UPLOAD_FOLDER'], 'temp.csv')
+    file_path = session.get('uploaded_data_file_path', None)
 
-    # read the original file
+    # if no variable to delete
     if app.config['flag_1'] == 0:
-        file_path = session.get('uploaded_data_file_path', None)
-        # read csv file
-        df = pd.read_csv(file_path)
-        # description
+        df = pd.read_csv(file_path)  # read original file
         df_desc = df.describe().round(2)
-    # read temp file
+    # if need to delete
     else:
-        # read csv file
-        df = pd.read_csv(tempfile)
-        # description
-        df_desc = df.describe().round(2)
+        df = pd.read_csv(file_path)  # read original file
+        # read temp description file
+        df_desc = pd.read_csv(tempfile, index_col=0)
 
     if request.method == 'GET':
         return render_template('basics.html', shape=df.shape, tables=[df_desc.to_html(header="true", classes='mystyle')], cols=df_desc.columns)
@@ -90,10 +86,7 @@ def basics():
         # reset
         else:
             app.config['flag_1'] = 0
-            file_path = session.get('uploaded_data_file_path', None)
-            # read csv file
             df = pd.read_csv(file_path)
-            # description
             df_desc = df.describe().round(2)
             return render_template('basics.html', shape=df.shape, tables=[df_desc.to_html(header="true", classes='mystyle')], cols=df_desc.columns)
 
