@@ -1,7 +1,7 @@
 column,exclude
 age,False
 workclass,False
-fnlwgt,False
+fnlwgt,True
 education,False
 education.num,False
 marital.status,False
@@ -12,5 +12,5 @@ sex,False
 capital.gain,False
 capital.loss,False
 hours.per.week,False
-native.country,False
+native.country,True
 income,False

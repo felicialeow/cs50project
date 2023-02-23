@@ -16,6 +16,37 @@ import numpy
 from scipy.stats import gaussian_kde
 
 
+# Helper function
+# calculate percentage in pie chart
+def calculate_percentage(count, allvals):
+    percent = numpy.round(count/numpy.sum(allvals)*100)
+    return f"{percent:.1f}%"
+
+
+# get color value for discrete groups
+def get_color(n):
+    cmap = plt.get_cmap('gist_rainbow', 100)
+    color_values = cmap([val*int(100/(n-1)) for val in range(n)])
+    return color_values
+
+
+# Set parameters of all text in figure
+smallfontsize = 6
+normalfontsize = 8
+largefontsize = 10
+params = {
+    'axes.labelsize': normalfontsize,
+    'axes.labelweight': 'bold',
+    'font.size': normalfontsize,
+    'legend.fontsize': smallfontsize,
+    'xtick.labelsize': normalfontsize,
+    'ytick.labelsize': normalfontsize,
+    'figure.titlesize': largefontsize,
+    'figure.titleweight': 'bold'
+}
+plt.rcParams.update(params)
+
+
 # Clear directory
 upload_folder = os.path.join('static', 'uploadfile')
 filelist = [file for file in os.listdir(upload_folder)]
@@ -248,7 +279,7 @@ def univariateplot():
             var_df = df[[selectedvar]].copy()
             var_df[selectedvar] = var_df[selectedvar].astype(vartype)
             buf = BytesIO()
-            fig = plt.figure()
+            fig = plt.figure(figsize=(6, 4))
             ax = fig.add_subplot()
 
             if varclass == 'numeric':
@@ -261,12 +292,38 @@ def univariateplot():
                     ax.set_xlabel(selectedvar)
                     plt.title('Density Plot')
                 else:
-                    bp = ax.boxplot(var_df, vert=False, patch_artist=True)
+                    bp = ax.boxplot(var_df, vert=False,
+                                    patch_artist=True)
                     bp['boxes'][0].set_facecolor('#5c729f')
                     bp['medians'][0].set(color='black')
                     ax.set_yticklabels([''])
                     ax.set_xlabel(selectedvar)
                     plt.title('Box Plot')
+            else:
+                count_df = var_df.value_counts().rename_axis(
+                    selectedvar).reset_index(name='counts')
+                color_values = get_color(count_df.shape[0])
+                if request.args.get('plottype') == 'piechart':
+                    wedges, texts = ax.pie(count_df['counts'],
+                                           labels=[calculate_percentage(
+                                               v, count_df['counts']) for v in count_df['counts']],
+                                           labeldistance=1.05,
+                                           colors=color_values,
+                                           wedgeprops=dict(edgecolor='w', alpha=0.75))
+                    # plt.setp(texts, fontsize=8)
+                    ax.legend(wedges,
+                              labels=count_df[selectedvar],
+                              title=selectedvar,
+                              loc="upper left",
+                              bbox_to_anchor=(1, 1))
+                    plt.title('Pie Chart')
+                else:
+                    ax.barh(count_df[selectedvar], count_df['counts'],
+                            color=color_values, alpha=0.75)
+                    ax.set_ylabel(selectedvar)
+                    plt.title('Bar Plot')
+
+            plt.tight_layout()
             plt.savefig(buf, format='png')
             plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
             return render_template('univariateplot.html', var=selectedvar, varclass=varclass, plot_url=plot_url)
