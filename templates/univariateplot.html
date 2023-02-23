@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CS50 Project</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <!-- Page content -->
+    <div>
+        <h1>Univariate Visualisation</h1>
+        <p>Let's look at the graphical representation of {{var}}.</p>
+        <!-- select plot type -->
+        <form method="GET" action="/univariateplot">
+            <input type="hidden" value={{var}} name="selected-var" />
+            <div>
+                <label for="plottype">Select plot type:</label>
+                <select required name="plottype" id="plottype">
+                    {% if varclass == "numeric" %}
+                    <option value="boxplot">Box Plot</option>
+                    <option value="densityplot">Density Plot</option>
+                    {% else %}
+                    <option value="barplot">Bar Plot</option>
+                    <option value="piechart">Pie Chart</option>
+                    {% endif %}
+                </select>
+            </div>
+            <input type="submit" value="Submit">
+        </form>
+        <!-- plot -->
+        <img src='data:image/png;base64,{{plot_url}}' />
+    </div>
+</body>
+
+</html>

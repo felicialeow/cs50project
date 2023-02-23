@@ -4,67 +4,39 @@
 <head>
     <title>CS50 Project</title>
     <link rel="stylesheet" href="/static/style.css" />
-    <script src="../static/jquery-3.6.0.js"></script>
 </head>
 
 <body>
     <!-- Page content -->
     <div>
-        <h1>Chart Builder</h1>
-        <p>The data has {{shape[0]}} rows and {{shape[1]}} columns.</p>
-
-        <!-- Error Message -->
-        <div>
-            {% if error %}
-            <p>X and Y variables must be different</p>
-            {% else %}
-            <p></p>
-            {% endif %}
-        </div>
-
+        <h1>Univariate Visualisations</h1>
+        <p>Let's look at the graphical representation of each variable.</p>
+        <!-- select variable type -->
+        {% if selectedtype == None %}
         <form method="POST" action="/selectvariable">
-            <!-- X variable -->
             <div>
-                <label for="xvar">Choose X variable:</label>
-                <select name="xvar" id="xvar">
-                    {% for col in columns %}
-                    <option value={{col}}>{{col}}</option>
-                    {% endfor %}
-                </select>
+                <input type="radio" name="selected-datatype" value="numeric" id="numeric" checked>
+                <label for="numeric">Numeric</label>
+                <input type="radio" name="selected-datatype" value="categorical" id="categorical">
+                <label for="categorical">Categorical</label>
             </div>
-            <script>
-                document.getElementById("xvar").addEventListener("change", function () {
-                    document.getElementById("xvar-chosen").innerHTML = document.getElementById("xvar").value
-                })
-            </script>
-            <!-- X variable measure -->
-            <div>
-                <label for="xmeasure">Choose a measure for <span id="xvar-chosen">X variable</span>:</label>
-                <select name="xmeasure" id="xmeasure">
-                    <option val="mean">Mean</option>
-                    <option val="max">Max</option>
-                    <option val="min">Min</option>
-                    <option val="sum">Sum</option>
-                    <option val="count">Count</option>
-                    <option val="distinct">Distinct Count</option>
-                </select>
-            </div>
-            <!-- Y variable -->
-            <div>
-                <p>Note: The Y variable must be different from the chosen X variable</p>
-                <label for="yvar">Choose Y variable:</label>
-                <select name="yvar" id="yvar">
-                    {% for col in columns %}
-                    <option value={{col}}>{{col}}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <!-- Preview Data -->
-            <div>
-                <p>Click here to view the summarised data of X and Y</p>
-                <input type="submit" value="Preview Data">
-            </div>
+            <button type="submit">Select variable type</button>
         </form>
+        {% else %}
+        <!-- select variable to plot chart -->
+        <form method="GET" action="/univariateplot">
+            <p>Variable Type: {{selectedtype|capitalize}}</p>
+            <div>
+                <label for="selected-var">Variable:</label>
+                <select required name="selected-var" id="selected-var">
+                    {% for var in varoptions %}
+                    <option value={{var}}>{{var}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <input type="submit" value="Submit">
+        </form>
+        {% endif %}
     </div>
 </body>
 

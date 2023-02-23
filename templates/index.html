@@ -17,7 +17,7 @@
             {% if success == "initial" or success == "no" %}
             <h2>Upload your CSV file:</h2>
             <form method="POST" action="/" enctype="multipart/form-data">
-                <input type="file" name="uploaded-file" accept=".csv">
+                <input required type="file" name="uploaded-file" accept=".csv">
                 <input type="submit" value="upload file">
             </form>
             {% endif %}
@@ -29,13 +29,12 @@
             <p></p>
             {% elif success == "yes" %}
             <p>Data file successfully uploaded</p>
-            <form method="GET" action="/basics">
-                <p>Click the button below to start building your visualization</p>
+            <form method="GET" action="/datatype">
                 <input type="submit" value="Start Explanatory Data Analysis">
             </form>
             {% else %}
             <p>Data file upload is unsuccessful.</p>
-            <p>Please check data structure - at least 2 rows and 2 columns</p>
+            <p>Please check data structure - .csv file with at least 2 rows and 2 columns</p>
             {% endif %}
         </div>
     </div>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CS50 Project</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="../static/jquery-3.6.0.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <!-- Page content -->
+    <div>
+        <h1>Data Structure</h1>
+        <p>Let's begin to understand the dataset! The dataset has {{shape[0]}} rows and {{shape[1]}} columns.</p>
+        <!-- show data structure (top 5 rows)-->
+        <p>Top 5 observations of the dataset:</p>
+        <table>
+            {% for table in df %}
+            {{ table|safe }}
+            {% endfor %}
+        </table>
+        <!-- variable type -->
+        <p>Determine the data type for each variable before we proceed to the next stage.</p>
+        <form method="POST" action="/datatype">
+            {% for col in vartype %}
+            <div>
+                <label for={{col[0]}}>{{col[0]}}</label>
+                <select required name={{col[0]}} id={{col[0]}}>
+                    {% if col[1] == "numeric" %}
+                    <option value="numeric">Numeric</option>
+                    <option value="categorical">Categorical</option>
+                    {% else %}
+                    <option value="categorical">Categorical</option>
+                    <option value="numeric">Numeric</option>
+                    {% endif %}
+                </select>
+            </div>
+            {% endfor %}
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CS50 Project</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="../static/jquery-3.6.0.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <!-- Page content -->
+    <div>
+        <h1>Summary of Categorical Variables</h1>
+        <p>Table of descriptive statistics to understand the frequency of value in each variable.</p>
+        <!-- navigation -->
+        <div>
+            <a href="#">Categorical Variables</a>
+            <a href="/numeric">Numeric Variables</a>
+        </div>
+        <!-- description for categorical variables -->
+        <table>
+            {% for table in df %}
+            {{ table|safe }}
+            {% endfor %}
+        </table>
+        <!-- select categorical variables to be excluded -->
+        {% if nvar > 1 %}
+        <form method="POST" action="/categorical">
+            <div>
+                <label for="categoricalvar">Remove categorical variable:</label>
+                <select name="remove-categoricalvar" id="categoricalvar">
+                    <option value="none" selected disabled hidden>Select</option>
+                    {% for col in columns %}
+                    <option value={{col}}>{{col}}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit" value="Remove">
+            </div>
+        </form>
+        {% endif %}
+        <!-- reset button add back all categorical variables -->
+        <form method="POST" action="/categorical">
+            <div>
+                <input name="reset-categoricalvar" type="submit" value="Reset">
+            </div>
+        </form>
+        <!-- univariate visualisations -->
+        <form method="GET" action="/selectvariable">
+            <p>Once you have selected all the interested variables, let's start building univariate visualisations!</p>
+            <input type="submit" value="Go">
+        </form>
+    </div>
+</body>
+
+</html>
