@@ -12,31 +12,57 @@
         <h1>Univariate Visualisation</h1>
         <p>Let's look at the graphical representation of each variable.</p>
         <!-- select variable type -->
-        {% if selectedtype == None %}
-        <form method="POST" action="/selectvariable">
-            <div>
-                <input type="radio" name="selected-datatype" value="numeric" id="numeric" checked>
-                <label for="numeric">Numeric</label>
-                <input type="radio" name="selected-datatype" value="categorical" id="categorical">
-                <label for="categorical">Categorical</label>
-            </div>
-            <button type="submit">Select variable type</button>
-        </form>
+        {% if selectedtype == None and varoptions == None %}
+        <div>
+            <form method="POST" action="/selectvariable">
+                <div>
+                    {% if nnumeric == 0 %}
+                    <input type="radio" name="selected-datatype" value="numeric" id="numeric" disabled>
+                    {% else %}
+                    <input type="radio" name="selected-datatype" value="numeric" id="numeric" checked>
+                    {% endif %}
+                    <label for="numeric">Numeric</label>
+                    {% if ncategorical == 0 %}
+                    <input type="radio" name="selected-datatype" value="categorical" id="categorical" disabled>
+                    {% else %}
+                    <input type="radio" name="selected-datatype" value="categorical" id="categorical">
+                    {% endif %}
+                    <label for="categorical">Categorical</label>
+                </div>
+                <button type="submit">Select variable type</button>
+            </form>
+        </div>
         {% else %}
         <!-- select variable to plot chart -->
-        <form method="GET" action="/univariateplot">
-            <p>Variable Type: {{selectedtype|capitalize}}</p>
-            <div>
-                <label for="selected-var">Variable:</label>
-                <select required name="selected-var" id="selected-var">
-                    {% for var in varoptions %}
-                    <option value={{var}}>{{var}}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <input type="submit" value="Submit">
-        </form>
+        <div>
+            <form method="GET" action="/univariateplot">
+                <p>Variable Type: {{selectedtype|capitalize}}</p>
+                <div>
+                    <label for="selected-var">Variable:</label>
+                    <select required name="selected-var" id="selected-var">
+                        {% for var in varoptions %}
+                        <option value={{var}}>{{var}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
         {% endif %}
+        <div>
+            <!-- skip to feature engineering -->
+            <form method="GET" action="/newfeature">
+                <input type="submit" value="Skip to Feature Engineering">
+            </form>
+            <!-- back to summary statistics -->
+            <form method="GET" action="/numeric">
+                <input type="submit" value="Back to Summary Statistics">
+            </form>
+            <!-- reset button -->
+            <form method="GET" action="/">
+                <input type="submit" value="Reset">
+            </form>
+        </div>
     </div>
 </body>
 

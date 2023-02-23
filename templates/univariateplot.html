@@ -12,28 +12,52 @@
         <h1>Univariate Visualisation</h1>
         <p>Let's look at the graphical representation of {{var}}.</p>
         <!-- select plot type -->
-        <form method="GET" action="/univariateplot">
-            <input type="hidden" value={{var}} name="selected-var" />
-            <div>
-                <label for="plottype">Select plot type:</label>
-                <select required name="plottype" id="plottype">
-                    {% if varclass == "numeric" %}
-                    <option value="boxplot">Box Plot</option>
-                    <option value="densityplot">Density Plot</option>
-                    {% else %}
-                    <option value="barplot">Bar Plot</option>
-                    <option value="piechart">Pie Chart</option>
-                    {% endif %}
-                </select>
-            </div>
-            <input type="submit" value="Submit">
-        </form>
+        <div>
+            <form method="GET" action="/univariateplot">
+                <input type="hidden" value={{var}} name="selected-var" />
+                <div>
+                    <label for="plottype">Select plot type:</label>
+                    <select required name="plottype" id="plottype">
+                        {% if varclass == "numeric" %}
+                        <option value="boxplot">Box Plot</option>
+                        <option value="densityplot">Density Plot</option>
+                        {% else %}
+                        <option value="barplot">Bar Plot</option>
+                        <option value="piechart">Pie Chart</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <input type="submit" value="Submit">
+            </form>
+
+        </div>
         <!-- plot -->
-        <img src='data:image/png;base64,{{plot_url}}' />
+        <div>
+            <img src='data:image/png;base64,{{plot_url}}' />
+        </div>
         <!-- choose another variable -->
-        <form method="GET" action="/selectvariable">
-            <input type="submit" value="Choose another variable">
-        </form>
+        <div>
+            <form method="GET" action="/selectvariable">
+                <input type="submit" value="Choose another variable">
+            </form>
+        </div>
+        <!-- go to feature engineering -->
+        <div>
+            <p>Click here to proceed to the next step.</p>
+            <form method="GET" action="/newfeature">
+                <input type="submit" value="Go">
+            </form>
+        </div>
+        <div>
+            <!-- back to summary statistics -->
+            <form method="GET" action="/numeric">
+                <input type="submit" value="Back to Summary Statistics">
+            </form>
+            <!-- reset button -->
+            <form method="GET" action="/">
+                <input type="submit" value="Reset">
+            </form>
+        </div>
     </div>
 </body>
 

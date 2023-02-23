@@ -19,46 +19,61 @@
             <a href="/numeric">Numeric Variables</a>
         </div>
         <!-- description for categorical variables -->
-        <table>
-            {% for table in df %}
-            {{ table|safe }}
-            {% endfor %}
-        </table>
+        <div>
+            {% if nvar > 0 %}
+            <table>
+                {% for table in df %}
+                {{ table|safe }}
+                {% endfor %}
+            </table>
+            {% else %}
+            <p>There is no numeric variable in the dataset.</p>
+            {% endif %}
+        </div>
         <!-- select categorical variables to be excluded -->
         {% if nvar > 1 %}
-        <form method="POST" action="/categorical">
-            <div>
-                <label for="categoricalvar">Remove categorical variable:</label>
-                <select name="remove-categoricalvar" id="categoricalvar">
-                    <option value="none" selected disabled hidden>Select</option>
-                    {% for col in columns %}
-                    <option value={{col}}>{{col}}</option>
-                    {% endfor %}
-                </select>
-                <input type="submit" value="Remove">
-            </div>
-        </form>
+        <div>
+            <form method="POST" action="/categorical">
+                <div>
+                    <label for="categoricalvar">Remove categorical variable:</label>
+                    <select name="remove-categoricalvar" id="categoricalvar">
+                        <option value="none" selected disabled hidden>Select</option>
+                        {% for col in columns %}
+                        <option value={{col}}>{{col}}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="submit" value="Remove">
+                </div>
+            </form>
+        </div>
         {% endif %}
         <!-- reset button add back all categorical variables -->
-        <form method="POST" action="/categorical">
-            <div>
+        {% if nvar > 0 %}
+        <div>
+            <form method="POST" action="/categorical">
                 <input name="reset-categoricalvar" type="submit" value="Reset Exclusions">
-            </div>
-        </form>
+            </form>
+        </div>
+        {% endif %}
         <!-- go to univariate visualisations -->
-        <form method="GET" action="/selectvariable">
-            <p>Once you have selected all the interested variables, let's start building univariate visualisations!</p>
-            <input type="submit" value="Go">
-        </form>
-        <!-- back button to change datatype -->
-        <form method="POST" action="/datatype">
-            <input type="hidden" name="back" value="true">
-            <input type="submit" value="Back to Data Structure">
-        </form>
-        <!-- reset button -->
-        <form method="GET" action="/">
-            <input type="submit" value="Reset">
-        </form>
+        <div>
+            <form method="GET" action="/selectvariable">
+                <p>Once you have selected all the interested variables, let's start building univariate visualisations!
+                </p>
+                <input type="submit" value="Go">
+            </form>
+        </div>
+        <div>
+            <!-- back button to change datatype -->
+            <form method="POST" action="/datatype">
+                <input type="hidden" name="back" value="true">
+                <input type="submit" value="Back to Data Structure">
+            </form>
+            <!-- reset button -->
+            <form method="GET" action="/">
+                <input type="submit" value="Reset">
+            </form>
+        </div>
     </div>
 </body>
 
