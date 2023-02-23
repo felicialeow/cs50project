@@ -11,30 +11,39 @@
     <div>
         <h1>CS50 Project</h1>
         <p>web tool to create simple visualization</p>
-
         <!-- File upload -->
         <div>
             {% if success == "initial" or success == "no" %}
             <h2>Upload your CSV file:</h2>
             <form method="POST" action="/" enctype="multipart/form-data">
                 <input required type="file" name="uploaded-file" accept=".csv">
-                <input type="submit" value="upload file">
+                <input type="submit" value="Upload">
             </form>
             {% endif %}
         </div>
-
         <!-- Success message -->
         <div>
             {% if success == "initial" %}
             <p></p>
+            <!-- successful upload-->
             {% elif success == "yes" %}
-            <p>Data file successfully uploaded</p>
-            <form method="GET" action="/datatype">
-                <input type="submit" value="Start Explanatory Data Analysis">
-            </form>
+            <div>
+                <p>Data file successfully uploaded</p>
+                <form method="GET" action="/datatype">
+                    <input type="submit" value="Start Explanatory Data Analysis">
+                </form>
+                <!-- reset button -->
+                <form method="POST" action="/">
+                    <input type="hidden" name="back" value="true">
+                    <input type="submit" value="Reset">
+                </form>
+            </div>
+            <!-- unsuccessful upload -->
             {% else %}
-            <p>Data file upload is unsuccessful.</p>
-            <p>Please check data structure - .csv file with at least 2 rows and 2 columns</p>
+            <div>
+                <p>Data file upload is unsuccessful.</p>
+                <p>Please check data structure - .csv file with at least 2 rows and 2 columns</p>
+            </div>
             {% endif %}
         </div>
     </div>

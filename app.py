@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See LICENSE in the project root for license information.
 # -----------------------------------------------------------------------------------------
 
+
 # Required libraries
 from flask import Flask, render_template, request, session, redirect, render_template_string
 import pandas as pd
@@ -16,14 +17,46 @@ import numpy
 from scipy.stats import gaussian_kde
 
 
-# Helper function
-# calculate percentage in pie chart
+# Flask configuration
+app = Flask(__name__)
+upload_folder = os.path.join('static', 'uploadfile')
+app.config['UPLOAD_FOLDER'] = upload_folder
+# app.config['FLAG_CHANGE_DATA'] = 0
+app.secret_key = "secret"
+
+
+# Helper function 1: clear directory
+def clear_dir():
+    filelist = [file for file in os.listdir(app.config['UPLOAD_FOLDER'])]
+    for file in filelist:
+        if (file == 'sample.csv'):
+            continue
+        else:
+            os.remove(os.path.join(upload_folder, file))
+    allowed_extension = {'csv'}
+
+
+# Helper function 2: start session
+def start_session():
+    list_of_info = ['uploaded_data_file_path', 'vartype_filepath',
+                    'vartype_FIXED_filepath', 'excludedvar_filepath']
+    for info in list_of_info:
+        session[info] = ""
+
+
+# Helper function 3: clear session information
+def clear_session(list_of_info):
+    for info in list_of_info:
+        session[info] = ""
+
+
+# Helper function 4: calculate percentage in pie chart
 def calculate_percentage(count, allvals):
     percent = numpy.round(count/numpy.sum(allvals)*100)
     return f"{percent:.1f}%"
 
 
-# get color value for discrete groups
+# Helper function 5: get color value for discrete groups
 def get_color(n):
     cmap = plt.get_cmap('gist_rainbow', 100)
     color_values = cmap([val*int(100/(n-1)) for val in range(n)])
@@ -47,30 +80,18 @@ params = {
 plt.rcParams.update(params)
 
 
-# Clear directory
-upload_folder = os.path.join('static', 'uploadfile')
-filelist = [file for file in os.listdir(upload_folder)]
-for file in filelist:
-    if (file == 'sample.csv'):
-        continue
-    else:
-        os.remove(os.path.join(upload_folder, file))
-allowed_extension = {'csv'}
-
-
-# Flask configuration
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = upload_folder
-# app.config['FLAG_CHANGE_DATA'] = 0
-app.secret_key = "secret"
-
-
 # Upload file
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
+        clear_dir()
+        start_session()
         return render_template('index.html', success="initial")
     else:
+        # user clicked the back button
+        if request.form.get('back') == 'true':
+            return redirect('/')
+        # user uploaded file
         if request.files.get('uploaded-file'):
             # flask file
             uploaded_file = request.files['uploaded-file']
@@ -108,11 +129,17 @@ def index():
                 # store file path of variable type in session
                 session['vartype_filepath'] = os.path.join(
                     app.config['UPLOAD_FOLDER'], 'vartype.csv')
+                # create a backup copy of variable type file
+                vartype_FIXED = vartype.copy()
+                vartype_FIXED.to_csv(os.path.join(
+                    app.config['UPLOAD_FOLDER'], 'vartype_FIXED.csv'), index=False)
+                session['vartype_FIXED_filepath'] = os.path.join(
+                    app.config['UPLOAD_FOLDER'], 'vartype_FIXED.csv')
                 return render_template('index.html', success="yes")
             # remove invalid data
             else:
-                os.remove(session.get('uploaded_data_file_path'))
-                session['uploaded_data_file_path'] = ""
+                clear_dir()
+                start_session()
                 return render_template('index.html', success="no")
 
 
@@ -121,7 +148,7 @@ def index():
 def datatype():
     # file path
     file_path = session.get('uploaded_data_file_path')
-    # read csv file
+    # read data file
     df = pd.read_csv(file_path)
     colnames = df.columns.tolist()
     # read variable type file
@@ -129,30 +156,37 @@ def datatype():
     vartype_list = list(zip(vartype['column'], vartype['class']))
 
     if request.method == 'GET':
-        return render_template('datatype.html', df=[df.head().to_html()], shape=df.shape, vartype=vartype_list)
+        return render_template('datatype.html', df=[df.head().to_html(header="true", classes='mystyle')], shape=df.shape, vartype=vartype_list)
     else:
-        # update any change in variable type
-        for col in colnames:
-            newcolclass = request.form.get(col)
-            if newcolclass != vartype.loc[vartype['column'] == col, 'class'].values[0]:
-                vartype.loc[vartype['column'] == col, 'class'] = newcolclass
-                if newcolclass == 'numeric':
-                    vartype.loc[vartype['column'] == col, 'type'] = 'int'
-                else:
-                    vartype.loc[vartype['column'] == col, 'type'] = 'str'
-        vartype.to_csv(session.get('vartype_filepath'), index=False)
-        # create empty dataframe to store excluded variables
-        excludedvar = pd.DataFrame({'column': colnames, 'exclude': False})
-        excludedvar.to_csv(os.path.join(
-            app.config['UPLOAD_FOLDER'], 'excludedvar.csv'), index=False)
-        # store file path of excluded variables in session
-        session['excludedvar_filepath'] = os.path.join(
-            app.config['UPLOAD_FOLDER'], 'excludedvar.csv')
-        # redirect to numerical descriptions
-        if any([True if t == 'numeric' else False for t in vartype['class']]):
-            return redirect('/numeric')
+        # user clicked the back button on numeric.html or categorical.html
+        if request.form.get('back') == 'true':
+            vartype = pd.read_csv(session.get('vartype_FIXED_filepath')).copy()
+            vartype.to_csv(session.get('vartype_filepath'), index=False)
+            return redirect('/datatype')
         else:
-            return redirect('/categorical')
+            # update any change in variable type
+            for col in colnames:
+                newcolclass = request.form.get(col)
+                if newcolclass != vartype.loc[vartype['column'] == col, 'class'].values[0]:
+                    vartype.loc[vartype['column'] ==
+                                col, 'class'] = newcolclass
+                    if newcolclass == 'numeric':
+                        vartype.loc[vartype['column'] == col, 'type'] = 'int'
+                    else:
+                        vartype.loc[vartype['column'] == col, 'type'] = 'str'
+            vartype.to_csv(session.get('vartype_filepath'), index=False)
+            # create empty dataframe to store excluded variables
+            excludedvar = pd.DataFrame({'column': colnames, 'exclude': False})
+            excludedvar.to_csv(os.path.join(
+                app.config['UPLOAD_FOLDER'], 'excludedvar.csv'), index=False)
+            # store file path of excluded variables in session
+            session['excludedvar_filepath'] = os.path.join(
+                app.config['UPLOAD_FOLDER'], 'excludedvar.csv')
+            # redirect to numerical descriptions
+            if any([True if t == 'numeric' else False for t in vartype['class']]):
+                return redirect('/numeric')
+            else:
+                return redirect('/categorical')
 
 
 # Description of numeric variables

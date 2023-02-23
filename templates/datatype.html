@@ -14,12 +14,14 @@
         <h1>Data Structure</h1>
         <p>Let's begin to understand the dataset! The dataset has {{shape[0]}} rows and {{shape[1]}} columns.</p>
         <!-- show data structure (top 5 rows)-->
-        <p>Top 5 observations of the dataset:</p>
-        <table>
-            {% for table in df %}
-            {{ table|safe }}
-            {% endfor %}
-        </table>
+        <div>
+            <p>Top 5 observations of the dataset:</p>
+            <table>
+                {% for table in df %}
+                {{ table|safe }}
+                {% endfor %}
+            </table>
+        </div>
         <!-- variable type -->
         <p>Determine the data type for each variable before we proceed to the next stage.</p>
         <form method="POST" action="/datatype">
@@ -38,6 +40,10 @@
             </div>
             {% endfor %}
             <input type="submit" value="Submit">
+        </form>
+        <!-- reset button -->
+        <form method="GET" action="/">
+            <input type="submit" value="Reset">
         </form>
     </div>
 </body>

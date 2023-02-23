@@ -42,13 +42,22 @@
         <!-- reset button add back all numeric variables -->
         <form method="POST" action="/numeric">
             <div>
-                <input name="reset-numericvar" type="submit" value="Reset">
+                <input name="reset-numericvar" type="submit" value="Reset Exclusions">
             </div>
         </form>
-        <!-- univariate visualisations -->
+        <!-- go to univariate visualisation -->
         <form method="GET" action="/selectvariable">
             <p>Once you have selected all the interested variables, let's start building univariate visualisations!</p>
             <input type="submit" value="Go">
+        </form>
+        <!-- back button to change datatype -->
+        <form method="POST" action="/datatype">
+            <input type="hidden" name="back" value="true">
+            <input type="submit" value="Back to Data Structure">
+        </form>
+        <!-- reset button -->
+        <form method="GET" action="/">
+            <input type="submit" value="Reset">
         </form>
     </div>
 
