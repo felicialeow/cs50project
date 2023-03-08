@@ -51,14 +51,24 @@
         {% endif %}
         <div>
             <!-- skip to feature engineering -->
+            <br>
             <form method="GET" action="/newfeature">
                 <input type="submit" value="Skip to Feature Engineering">
             </form>
+
+            <!-- skip to multivariate plot -->
+            <br>
+            <form method="GET" action="/selectmultivar">
+                <input type="submit" value="Skip to Multivariate Plot">
+            </form>
+
             <!-- back to summary statistics -->
+            <br>
             <form method="GET" action="/numeric">
                 <input type="submit" value="Back to Summary Statistics">
             </form>
             <!-- reset button -->
+            <br>
             <form method="GET" action="/">
                 <input type="submit" value="Reset">
             </form>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CS50 Project</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <!-- Page content -->
+    <div>
+        <h1>Feature Engineering</h1>
+        <p>Selected variable is {{selectedvar}}</p>
+        <p>Selected method is {{method}}</p>
+        {% if done == "No" %}
+        <div>
+            <form method="POST" action="/rename_label">
+                <p>If no need to change, leave as blank</p>
+                {% for label in labels %}
+
+                <p>{{label}}
+                    <input type="hidden" name="orilabel" value={{label}}>
+                    <input name="newlabel" autocomplete="off">
+                </p>
+                {% endfor %}
+                <input type="submit" value="rename">
+            </form>
+
+        </div>
+        {% else %}
+        <div>
+            <p>the labels of {{selectedvar}} are renamed</p>
+
+        </div>
+        {% endif %}
+        <br>
+
+
+        <div>
+            <!-- back to summary statistics -->
+            <form method="GET" action="/selectvariable">
+                <input type="submit" value="Back to Univariate Plot">
+            </form>
+            <!-- reset button -->
+            <form method="GET" action="/">
+                <input type="submit" value="Reset">
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import numpy
 from scipy.stats import gaussian_kde
-
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+import seaborn as sns
 
 # Flask configuration
 app = Flask(__name__)
@@ -38,8 +39,9 @@ def clear_dir():
 
 # Helper function 2: start session
 def start_session():
-    list_of_info = ['uploaded_data_file_path', 'vartype_filepath',
-                    'vartype_FIXED_filepath', 'excludedvar_filepath', 'newfeature_filepath']
+    list_of_info = ['uploaded_data_file_path', 'uploaded_data_backup_filepath', 'vartype_filepath',
+                    'vartype_FIXED_filepath', 'excludedvar_filepath', 'newfeature_filepath',
+                    'method', 'variable']
     for info in list_of_info:
         session[info] = ""
 
@@ -66,16 +68,29 @@ def get_color(n):
 # Helper function 6: generate list of formula for feature engineering
 def generate_formula(vartype):
     if vartype == 'numeric':
-        formula = ['Sum of columns',
-                   'Difference from column',
-                   'Multiply by constant',
-                   'Divide by constant',
-                   'Take log',
-                   'Take exponential']
+        formula = ['Take_log',
+                   'Take_exponential',
+                   'Min-Max_Scaler',
+                   'Standardization',
+                   'Binning']
     else:
-        formula = ['Rename category label',
-                   'Group categories']
+        formula = ['Rename_label']
     return formula
+
+# Helper function 7: write files
+
+
+def write_files(df, vartype_df, excludedvar_df, new_row, newvar):
+
+    vartype_df = vartype_df.append(new_row, ignore_index=True)
+    excludedvar_df = excludedvar_df.append(
+        {'column': newvar, 'exclude': False}, ignore_index=True)
+    df.to_csv(session.get(
+        'uploaded_data_file_path'), index=False)
+    vartype_df.to_csv(session.get(
+        'vartype_filepath'), index=False)
+    excludedvar_df.to_csv(session.get(
+        'excludedvar_filepath'), index=False)
 
 
 # Set parameters of all text in figure
@@ -118,9 +133,14 @@ def index():
             # store file path in session
             session['uploaded_data_file_path'] = os.path.join(
                 app.config['UPLOAD_FOLDER'], filename)
+            # # store backup file
+            session['uploaded_data_backup_filepath'] = os.path.join(
+                app.config['UPLOAD_FOLDER'], 'backup.csv')
+
             # check data structure
             # at least 2 rows and 2 columns
             df = pd.read_csv(session.get('uploaded_data_file_path'))
+            df.to_csv(session.get('uploaded_data_backup_filepath'), index=False)
             if (df.shape[0] >= 2 and df.shape[1] >= 2):
                 # determine variable type
                 colnames = df.columns.tolist()
@@ -150,6 +170,8 @@ def index():
                     app.config['UPLOAD_FOLDER'], 'vartype_FIXED.csv'), index=False)
                 session['vartype_FIXED_filepath'] = os.path.join(
                     app.config['UPLOAD_FOLDER'], 'vartype_FIXED.csv')
+
+                session['temp_list'] = []
                 return render_template('index.html', success="yes")
             # remove invalid data
             else:
@@ -162,7 +184,8 @@ def index():
 @app.route('/datatype', methods=['GET', 'POST'])
 def datatype():
     # file path
-    file_path = session.get('uploaded_data_file_path')
+    file_path = session.get('uploaded_data_backup_filepath')
+    # file_path = session.get('uploaded_data_filepath')
     # read data file
     df = pd.read_csv(file_path)
     colnames = df.columns.tolist()
@@ -331,6 +354,26 @@ def selectvariable():
         else:
             return render_template('selectvariable.html', selectedtype=selectedtype, varoptions=categoricalvar, ncategorical=len(categoricalvar), nnumeric=len(numericvar))
 
+# Select multivariable
+
+
+@app.route('/selectmultivar', methods=['GET', 'POST'])
+def selectmultivar():
+
+    # read files
+    vartype_df = pd.read_csv(session.get('vartype_filepath'))
+    excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
+    includedvar = excludedvar_df.loc[~excludedvar_df['exclude'], 'column'].tolist(
+    )
+    # categorical variables for x and group
+    categoricalvar = [
+        col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'categorical', 'column'].values]
+    # numeric variables for y
+    numericvar = [
+        col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'numeric', 'column'].values]
+
+    return render_template('selectmultivar.html', xs=includedvar, ys=numericvar, groups=categoricalvar)
+
 
 # Univariate plot
 @app.route('/univariateplot', methods=['GET', 'POST'])
@@ -409,6 +452,64 @@ def univariateplot():
             return render_template('univariateplot.html', var=selectedvar, varclass=varclass, plot_url=plot_url)
 
 
+# Univariate plot
+# https://www.kaggle.com/code/alokevil/simple-eda-for-beginners
+@app.route('/multivariateplot', methods=['GET', 'POST'])
+def multivariateplot():
+    x = request.form.get('selected_x')
+    y = request.form.get('selected_y')
+    z = request.form.get('selected_group')
+    # read files
+    vartype_df = pd.read_csv(session.get('vartype_filepath'))
+    excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
+    includedvar = excludedvar_df.loc[~excludedvar_df['exclude'], 'column'].tolist(
+    )
+    categoricalvar = [
+        col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'categorical', 'column'].values]
+
+    numericvar = [
+        col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'numeric', 'column'].values]
+
+    # some inputs are same
+    if x == y or x == z:
+        return render_template('error.html', msg="Error:Please make sure inputs are different")
+    if x in numericvar and y == "_count_":
+        return render_template('error.html', msg="Error:Cannot plot count when x is numeric")
+
+    # if z == "none" and y == "_count_":
+    #     return render_template('error.html', msg="Error:Cannot plot count when group is none or x and group are both categorical")
+
+    file_path = session.get('uploaded_data_file_path')
+    # read all files
+    df = pd.read_csv(file_path)
+
+    # buffer to store image file
+    buf = BytesIO()
+    # # empty canvas for plotting
+
+    fig = plt.figure(figsize=(8, 6))
+
+    # ax = fig.add_subplot()
+    if y == '_count_' and z != 'none':
+        sns.countplot(x=x, hue=z, data=df)
+
+    elif z == 'none':
+        if y == '_count_':
+            sns.countplot(x=x, data=df)
+        elif x in numericvar and y in numericvar:
+            sns.relplot(x=x, y=y, data=df)
+        else:
+            sns.boxplot(x=x, y=y, data=df)
+
+    else:
+        sns.boxplot(x=x, y=y, hue=z, data=df)
+
+    plt.tight_layout()
+    plt.savefig(buf, format='png')
+    plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
+    return render_template('multivariateplot.html', plot_url=plot_url)
+
+
 # Feature engineering
 @app.route('/newfeature', methods=['GET', 'POST'])
 def newfeature():
@@ -416,7 +517,7 @@ def newfeature():
     df = pd.read_csv(session.get('uploaded_data_file_path'))
     vartype_df = pd.read_csv(session.get('vartype_filepath'))
     excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
-    newfeature_df = pd.read_csv(session.get('newfeature_filepath'))
+    # newfeature_df = pd.read_csv(session.get('newfeature_filepath'))
     # included variables
     includedvar = excludedvar_df.loc[~excludedvar_df.exclude, 'column'].tolist(
     )
@@ -428,11 +529,112 @@ def newfeature():
                                      == selectedvar, 'class'].values[0]
             if request.args.get('selected-method'):
                 selectedmethod = request.args.get('selected-method')
-                return render_template('newfeature.html', vars=None, method=selectedmethod, selectedvar=selectedvar)
+
+                if selectedmethod == "Take_log":
+                    newvar = selectedvar + '_log'
+                    df[newvar] = numpy.log(df[selectedvar])
+                    new_row = {'column': newvar,
+                               'class': 'numeric', 'type': 'float'}
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+
+                if selectedmethod == "Take_exponential":
+                    newvar = selectedvar + '_exp'
+                    df[newvar] = numpy.exp(df[selectedvar])
+                    new_row = {'column': newvar,
+                               'class': 'numeric', 'type': 'float'}
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+
+                if selectedmethod == "Min-Max_Scaler":
+                    scaler = MinMaxScaler()
+                    newvar = selectedvar + '_minmaxscaler'
+                    df[newvar] = scaler.fit_transform(
+                        df[selectedvar].values.reshape(-1, 1))
+                    new_row = {'column': newvar,
+                               'class': 'numeric', 'type': 'float'}
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+
+                if selectedmethod == "Standardization":
+                    scaler = StandardScaler()
+                    newvar = selectedvar + '_stdscaler'
+                    df[newvar] = scaler.fit_transform(
+                        df[selectedvar].values.reshape(-1, 1))
+                    new_row = {'column': newvar,
+                               'class': 'numeric', 'type': 'float'}
+
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+
+                if selectedmethod == "Binning":
+                    session['method'] = selectedmethod
+                    session['variable'] = selectedvar
+                    return render_template("binning.html", method=selectedmethod, selectedvar=selectedvar, done='No')
+
+                if selectedmethod == "Rename_label":
+                    session['method'] = selectedmethod
+                    session['variable'] = selectedvar
+                    labels = df[selectedvar].unique()
+                    return render_template("rename_label.html", method=selectedmethod, selectedvar=selectedvar, done='No', labels=labels)
+
+                return render_template('newfeature.html', vars=None, method=selectedmethod, selectedvar=selectedvar, newcreated=newvar)
             else:
                 return render_template('newfeature.html', vars=None, method=None, selectedvar=selectedvar, vartype=vartype, options=generate_formula(vartype))
         else:
             return render_template('newfeature.html', vars=includedvar)
+
+
+@app.route('/binning', methods=['GET', 'POST'])
+def bin():
+    # read all files
+    df = pd.read_csv(session.get('uploaded_data_file_path'))
+    vartype_df = pd.read_csv(session.get('vartype_filepath'))
+    excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
+
+    selectedmethod = session.get('method')
+    selectedvar = session.get('variable')
+    cut = request.form.get("cut")
+
+    bins = cut.split(',')
+    bins = list(map(int, bins))
+
+    # make sure bins cover min and max value
+    if bins[0] > df[selectedvar].min():
+        bins.insert(0, int(df[selectedvar].min()))
+    if bins[-1] < df[selectedvar].max():
+        bins.append(int(df[selectedvar].max()))
+
+    newvar = session.get('variable') + '_bin'
+    df[newvar] = pd.cut(df[selectedvar], bins)
+    new_row = {'column': newvar,
+               'class': 'categorical', 'type': 'str'}
+    write_files(df, vartype_df, excludedvar_df,
+                new_row, newvar)
+    return render_template('binning.html', method=selectedmethod, selectedvar=selectedvar, done='Yes', newvar=newvar)
+
+
+@app.route('/rename_label', methods=['GET', 'POST'])
+def relabel():
+    # read all files
+    # changed_labellist = session.get('temp_list')
+
+    df = pd.read_csv(session.get('uploaded_data_file_path'))
+
+    selectedmethod = session.get('method')
+    selectedvar = session.get('variable')
+
+    newlabel = request.form.getlist("newlabel")
+    orilabel = request.form.getlist("orilabel")
+    # print(newlabel)
+    for i, j in zip(newlabel, orilabel):
+        if i != '':
+            df[selectedvar] = df[selectedvar].replace(j, i)
+
+    df.to_csv(session.get(
+        'uploaded_data_file_path'), index=False)
+
+    return render_template('rename_label.html', method=selectedmethod, selectedvar=selectedvar, done='Yes')
 
 
 @app.route('/basics', methods=['GET', 'POST'])

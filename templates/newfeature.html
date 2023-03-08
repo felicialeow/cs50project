@@ -10,7 +10,7 @@
     <!-- Page content -->
     <div>
         <h1>Feature Engineering</h1>
-        <p>Create new variables based on existing ones for multivariate plots.</p>
+        <!-- <p>Create new variables based on existing ones for multivariate plots.</p> -->
         <!-- select variable type -->
         {% if vars != None %}
         <div>
@@ -42,22 +42,29 @@
                     <input type="submit" value="Submit">
                 </form>
             </div>
+
             {% else %}
             <div>
                 <p>Selected method is {{method}}</p>
-                <form method="POST" action="/newfeature">
-
-                </form>
+                <p>New variable {{newcreated}} is created!</p>
             </div>
             {% endif %}
         </div>
         {% endif %}
+
         <div>
-            <!-- back to summary statistics -->
+            <!-- back to Univariate Plot -->
+            <br>
             <form method="GET" action="/selectvariable">
                 <input type="submit" value="Back to Univariate Plot">
             </form>
+            <!-- back to multivariate plot -->
+            <br>
+            <form method="GET" action="/multivar_plot">
+                <input type="submit" value="Back to Multivariate Plot">
+            </form>
             <!-- reset button -->
+            <br>
             <form method="GET" action="/">
                 <input type="submit" value="Reset">
             </form>

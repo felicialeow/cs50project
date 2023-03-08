@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CS50 Project</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <!-- Page content -->
+    <div>
+        <h1>Feature Engineering</h1>
+        <p>Selected variable is {{selectedvar}}</p>
+        <p>Selected method is {{method}}</p>
+        {% if done=='No' %}
+        <div>
+            <form method="POST" action="/binning">
+                <p>Please give the cutting points for binning, use comma between each number</p>
+                <input name="cut" placeholder="eg: 1,5,10" id="cut" autocomplete="off">
+                <input type="submit" value="Submit">
+            </form>
+
+        </div>
+        {% else %}
+        <div>
+            <p>New variable {{newvar}} is created!</p>
+        </div>
+        {% endif %}
+
+        <div>
+            <!-- back to summary statistics -->
+            <form method="GET" action="/selectvariable">
+                <input type="submit" value="Back to Univariate Plot">
+            </form>
+            <!-- reset button -->
+            <form method="GET" action="/">
+                <input type="submit" value="Reset">
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

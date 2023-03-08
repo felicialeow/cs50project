@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CS50 Project</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <!-- Page content -->
+    <div>
+        <h1>Multivariate Visualisation</h1>
+
+        <form method="POST" action="/multivariateplot">
+            <p>Select x axis</p>
+            <div>
+                <select required name="selected_x" id="selected_x">
+                    <!-- <option value="none" selected disabled hidden>Select</option> -->
+                    {% for var in xs %}
+                    <option value={{var}}>{{var}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <p>Select y axis</p>
+            <div>
+                <select required name="selected_y" id="selected_y">
+                    <!-- <option value="none" selected>Select</option> -->
+                    <option value="_count_">count</option>
+                    {% for var in ys %}
+                    <option value={{var}}>{{var}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <p>Select Group</p>
+            <div>
+                <select name="selected_group" id="selected_group">
+                    <option value="none" selected>none</option>
+                    {% for var in groups %}
+                    <option value={{var}}>{{var}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <br>
+            <input type="submit" value="Submit">
+        </form>
+
+
+
+
+        <div>
+            <!-- go to feature engineering -->
+            <br>
+            <form method="GET" action="/newfeature">
+                <input type="submit" value="Go to Feature Engineering">
+            </form>
+            <!-- back to summary statistics -->
+            <br>
+            <form method="GET" action="/numeric">
+                <input type="submit" value="Back to Summary Statistics">
+            </form>
+            <!-- reset button -->
+            <br>
+            <form method="GET" action="/">
+                <input type="submit" value="Reset">
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>

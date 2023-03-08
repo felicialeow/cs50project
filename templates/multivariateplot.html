@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CS50 Project</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <!-- Page content -->
+    <div>
+        <h1>Multivariate Visualisation</h1>
+
+        <div>
+            <img src='data:image/png;base64,{{plot_url}}' />
+        </div>
+        <!-- <br>TODO make it able to change size
+        <form method='GET' action="/multivariateplot">
+            <input type="submit" name="expandx" value="expand x axis">
+
+        </form> -->
+
+        <div>
+            <!-- back to multivariate plot -->
+            <br>
+            <form method="GET" action="/selectmultivar">
+                <input type="submit" value="Back to Multivariate Plot">
+            </form>
+
+            <!-- go to feature engineering -->
+            <br>
+            <form method="GET" action="/newfeature">
+                <input type="submit" value="Go to Feature Engineering">
+            </form>
+            <!-- back to summary statistics -->
+            <br>
+            <form method="GET" action="/numeric">
+                <input type="submit" value="Back to Summary Statistics">
+            </form>
+            <!-- reset button -->
+            <br>
+            <form method="GET" action="/">
+                <input type="submit" value="Reset">
+            </form>
+        </div>
+
+    </div>
+</body>
+
+</html>
