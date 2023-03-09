@@ -36,23 +36,27 @@
             <img src='data:image/png;base64,{{plot_url}}' />
         </div>
         <!-- choose another variable -->
+        <br>
         <div>
             <form method="GET" action="/selectvariable">
                 <input type="submit" value="Choose another variable">
             </form>
         </div>
         <!-- go to feature engineering -->
+        <br>
         <div>
             <p>Click here to proceed to the next step.</p>
             <form method="GET" action="/newfeature">
                 <input type="submit" value="Go">
             </form>
         </div>
+        <br>
         <div>
             <!-- back to summary statistics -->
             <form method="GET" action="/numeric">
                 <input type="submit" value="Back to Summary Statistics">
             </form>
+            <br>
             <!-- reset button -->
             <form method="GET" action="/">
                 <input type="submit" value="Reset">

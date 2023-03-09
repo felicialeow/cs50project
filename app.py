@@ -452,7 +452,7 @@ def univariateplot():
             return render_template('univariateplot.html', var=selectedvar, varclass=varclass, plot_url=plot_url)
 
 
-# Univariate plot
+# Multivariate plot
 # https://www.kaggle.com/code/alokevil/simple-eda-for-beginners
 @app.route('/multivariateplot', methods=['GET', 'POST'])
 def multivariateplot():
@@ -491,11 +491,11 @@ def multivariateplot():
 
     # ax = fig.add_subplot()
     if y == '_count_' and z != 'none':
-        sns.countplot(x=x, hue=z, data=df)
+        sns.countplot(x=x, hue=z, data=df, order=df[x].value_counts().index)
 
     elif z == 'none':
         if y == '_count_':
-            sns.countplot(x=x, data=df)
+            sns.countplot(x=x, data=df, order=df[x].value_counts().index)
         elif x in numericvar and y in numericvar:
             sns.relplot(x=x, y=y, data=df)
         else:
@@ -601,7 +601,7 @@ def bin():
 
     # make sure bins cover min and max value
     if bins[0] > df[selectedvar].min():
-        bins.insert(0, int(df[selectedvar].min()))
+        bins.insert(0, int(df[selectedvar].min())-1)
     if bins[-1] < df[selectedvar].max():
         bins.append(int(df[selectedvar].max()))
 
