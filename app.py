@@ -459,6 +459,22 @@ def multivariateplot():
     x = request.form.get('selected_x')
     y = request.form.get('selected_y')
     z = request.form.get('selected_group')
+
+    if x is not None:
+        session['x'] = x
+    else:
+        x = session.get('x')
+
+    if y is not None:
+        session['y'] = y
+    else:
+        y = session.get('y')
+
+    if z is not None:
+        session['z'] = z
+    else:
+        z = session.get('z')
+
     # read files
     vartype_df = pd.read_csv(session.get('vartype_filepath'))
     excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
@@ -486,8 +502,14 @@ def multivariateplot():
     # buffer to store image file
     buf = BytesIO()
     # # empty canvas for plotting
-
-    fig = plt.figure(figsize=(8, 6))
+    if request.form.get('expandx'):
+        xaxis = session.get('xaxis')
+        xaxis = xaxis + 1
+        session['xaxis'] = xaxis
+    else:
+        session['xaxis'] = 8
+        xaxis = session.get('xaxis')
+    fig = plt.figure(figsize=(xaxis, 6))
 
     # ax = fig.add_subplot()
     if y == '_count_' and z != 'none':
@@ -517,8 +539,7 @@ def newfeature():
     df = pd.read_csv(session.get('uploaded_data_file_path'))
     vartype_df = pd.read_csv(session.get('vartype_filepath'))
     excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
-    # newfeature_df = pd.read_csv(session.get('newfeature_filepath'))
-    # included variables
+
     includedvar = excludedvar_df.loc[~excludedvar_df.exclude, 'column'].tolist(
     )
 
