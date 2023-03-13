@@ -1,0 +1,50 @@
+{% extends "BASE.html" %}
+
+{% block content %}
+<div>
+    <!-- Introduction-->
+    <h1 id="page-title">Data Transformation</h1>
+    <p>Data transformation is a key step in the process of EDA. It changes the raw data to achieve various goals. It can
+        involves mathematical operations that alter the scale or shape of data; handling outliers and anomalies;
+        replacing or combining values.</p>
+    {% if vars != None %}
+    <div>
+        <form method="GET" action="/newfeature">
+            <label for="selected-var1">Select one variable:</label>
+            <select required name="selected-var1" id="selected-var1">
+                {% for col in vars %}
+                <option value={{col}}>{{col}}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+    <!-- select method -->
+    {% else %}
+    <div>
+        <p>Selected variable is {{selectedvar}}</p>
+        {% if method == None %}
+        <div>
+            <p>Here's all the formula to create a new variable based on the {{vartype}} variable.</p>
+            <form method="GET" action="/newfeature">
+                <input type="hidden" name="selected-var1" value={{selectedvar}}>
+                <label for="selected-method">Select method:</label>
+                <select required name="selected-method" id="selected-method">
+                    {% for option in options %}
+                    <option value={{option}}>{{option}}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+
+        {% else %}
+        <div>
+            <p>Selected method is {{method}}</p>
+            <p>New variable {{newcreated}} is created!</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,11 +1,6 @@
-# -----------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
-# -----------------------------------------------------------------------------------------
-
-
 # Required libraries
 from flask import Flask, render_template, request, session, redirect, render_template_string
+from flask_socketio import SocketIO
 import pandas as pd
 import os
 from werkzeug.utils import secure_filename
@@ -18,11 +13,11 @@ from scipy.stats import gaussian_kde
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import seaborn as sns
 
+
 # Flask configuration
 app = Flask(__name__)
 upload_folder = os.path.join('static', 'uploadfile')
 app.config['UPLOAD_FOLDER'] = upload_folder
-# app.config['FLAG_CHANGE_DATA'] = 0
 app.secret_key = "secret"
 
 
@@ -30,18 +25,18 @@ app.secret_key = "secret"
 def clear_dir():
     filelist = [file for file in os.listdir(app.config['UPLOAD_FOLDER'])]
     for file in filelist:
-        if (file == 'sample.csv'):
-            continue
-        else:
-            os.remove(os.path.join(upload_folder, file))
-    allowed_extension = {'csv'}
+        os.remove(os.path.join(upload_folder, file))
 
 
 # Helper function 2: start session
 def start_session():
-    list_of_info = ['uploaded_data_file_path', 'uploaded_data_backup_filepath', 'vartype_filepath',
-                    'vartype_FIXED_filepath', 'excludedvar_filepath', 'newfeature_filepath',
-                    'method', 'variable']
+    list_of_info = ['uploaded_data_file_path',
+                    'uploaded_data_backup_filepath',
+                    'vartype_filepath',
+                    'vartype_FIXED_filepath',
+                    'excludedvar_filepath',
+                    'method',
+                    'variable']
     for info in list_of_info:
         session[info] = ""
 
@@ -77,11 +72,9 @@ def generate_formula(vartype):
         formula = ['Rename_label']
     return formula
 
+
 # Helper function 7: write files
-
-
 def write_files(df, vartype_df, excludedvar_df, new_row, newvar):
-
     vartype_df = vartype_df.append(new_row, ignore_index=True)
     excludedvar_df = excludedvar_df.append(
         {'column': newvar, 'exclude': False}, ignore_index=True)
@@ -93,21 +86,25 @@ def write_files(df, vartype_df, excludedvar_df, new_row, newvar):
         'excludedvar_filepath'), index=False)
 
 
-# Set parameters of all text in figure
-smallfontsize = 6
-normalfontsize = 8
-largefontsize = 10
-params = {
-    'axes.labelsize': normalfontsize,
-    'axes.labelweight': 'bold',
-    'font.size': normalfontsize,
-    'legend.fontsize': smallfontsize,
-    'xtick.labelsize': normalfontsize,
-    'ytick.labelsize': normalfontsize,
-    'figure.titlesize': largefontsize,
-    'figure.titleweight': 'bold'
-}
-plt.rcParams.update(params)
+# Helper function 8: set parameters of all text in figure
+def set_figure_params():
+    smallfontsize = 5
+    normalfontsize = 7
+    largefontsize = 9
+    params = {
+        'axes.labelsize': normalfontsize,
+        'axes.labelweight': 'bold',
+        'font.size': normalfontsize,
+        'legend.fontsize': smallfontsize,
+        'xtick.labelsize': normalfontsize,
+        'ytick.labelsize': normalfontsize,
+        'figure.titlesize': largefontsize,
+        'figure.titleweight': 'bold'
+    }
+    plt.rcParams.update(params)
+
+
+set_figure_params
 
 
 # Upload file
@@ -118,9 +115,6 @@ def index():
         start_session()
         return render_template('index.html', success="initial")
     else:
-        # user clicked the back button
-        if request.form.get('back') == 'true':
-            return redirect('/')
         # user uploaded file
         if request.files.get('uploaded-file'):
             # flask file
@@ -133,15 +127,26 @@ def index():
             # store file path in session
             session['uploaded_data_file_path'] = os.path.join(
                 app.config['UPLOAD_FOLDER'], filename)
-            # # store backup file
+            # store backup file
+            uploaded_file.save(os.path.join(
+                app.config['UPLOAD_FOLDER'], 'backup.csv'))
             session['uploaded_data_backup_filepath'] = os.path.join(
                 app.config['UPLOAD_FOLDER'], 'backup.csv')
 
-            # check data structure
-            # at least 2 rows and 2 columns
-            df = pd.read_csv(session.get('uploaded_data_file_path'))
-            df.to_csv(session.get('uploaded_data_backup_filepath'), index=False)
-            if (df.shape[0] >= 2 and df.shape[1] >= 2):
+            # check file format and data structure
+            file_extension = os.path.splitext(filename)[1]
+            error = 0
+            if file_extension == '.csv':
+                df = pd.read_csv(session.get('uploaded_data_file_path'))
+                if (df.shape[0] >= 2 and df.shape[1] >= 2):
+                    error = 0
+                else:
+                    error = 1
+            else:
+                error = 1
+
+            # valid file
+            if error == 0:
                 # determine variable type
                 colnames = df.columns.tolist()
                 colclass = []
@@ -170,193 +175,403 @@ def index():
                     app.config['UPLOAD_FOLDER'], 'vartype_FIXED.csv'), index=False)
                 session['vartype_FIXED_filepath'] = os.path.join(
                     app.config['UPLOAD_FOLDER'], 'vartype_FIXED.csv')
-
-                session['temp_list'] = []
+                # create empty dataframe to store excluded variables
+                excludedvar = pd.DataFrame(
+                    {'column': colnames, 'exclude': False})
+                excludedvar.to_csv(os.path.join(
+                    app.config['UPLOAD_FOLDER'], 'excludedvar.csv'), index=False)
+                # store file path of excluded variables in session
+                session['excludedvar_filepath'] = os.path.join(
+                    app.config['UPLOAD_FOLDER'], 'excludedvar.csv')
                 return render_template('index.html', success="yes")
-            # remove invalid data
+            # remove invalid data upload
             else:
                 clear_dir()
                 start_session()
-                return render_template('index.html', success="no")
+                error_message = []
+                if file_extension != '.csv':
+                    error_message.append('Data file needs to be .csv format')
+                else:
+                    if df.shape[0] < 2:
+                        error_message.append(
+                            'Data needs to have at least 2 rows')
+                    if df.shape[1] < 2:
+                        error_message.append(
+                            'Data needs to have at least 2 columns')
+                return render_template('index.html', success="no", messages=error_message)
 
 
 # Data structure
 @app.route('/datatype', methods=['GET', 'POST'])
 def datatype():
-    # file path
-    file_path = session.get('uploaded_data_backup_filepath')
-    # file_path = session.get('uploaded_data_filepath')
-    # read data file
-    df = pd.read_csv(file_path)
-    colnames = df.columns.tolist()
-    # read variable type file
-    vartype = pd.read_csv(session.get('vartype_filepath'))
-    vartype_list = list(zip(vartype['column'], vartype['class']))
-
-    if request.method == 'GET':
-        return render_template('datatype.html', df=[df.head().to_html(header="true", classes='mystyle')], shape=df.shape, vartype=vartype_list)
-    else:
-        # user clicked the back button on numeric.html or categorical.html
-        if request.form.get('back') == 'true':
-            vartype = pd.read_csv(session.get('vartype_FIXED_filepath')).copy()
-            vartype.to_csv(session.get('vartype_filepath'), index=False)
-            return redirect('/datatype')
+    # current session
+    if request.method == 'POST':
+        # file path
+        file_path = session.get('uploaded_data_file_path')
+        # read data file
+        df = pd.read_csv(file_path)
+        html_table = df.head().to_html(index=False, header=True, classes='table-style')
+        colnames = df.columns.tolist()
+        # read variable type file
+        if request.form.get('reset') == 'datatype':
+            vartype = pd.read_csv(session.get('vartype_FIXED_filepath'))
         else:
-            # update any change in variable type
+            vartype = pd.read_csv(session.get('vartype_filepath'))
+        vartype_list = list(zip(vartype['column'], vartype['class']))
+
+        # user redirected to datatype.html
+        if request.form.get('redirect') == 'datatype':
+            return render_template('datatype.html', df=[html_table], shape=df.shape, vartype=vartype_list, submit='no')
+        # user submitted the form to change variable type
+        else:
             for col in colnames:
                 newcolclass = request.form.get(col)
+                # update variable type if it is different from current
                 if newcolclass != vartype.loc[vartype['column'] == col, 'class'].values[0]:
                     vartype.loc[vartype['column'] ==
                                 col, 'class'] = newcolclass
                     if newcolclass == 'numeric':
-                        vartype.loc[vartype['column'] == col, 'type'] = 'int'
+                        vartype.loc[vartype['column']
+                                    == col, 'type'] = 'int'
                     else:
-                        vartype.loc[vartype['column'] == col, 'type'] = 'str'
-            vartype.to_csv(session.get('vartype_filepath'), index=False)
-            # create empty dataframe to store excluded variables
-            excludedvar = pd.DataFrame({'column': colnames, 'exclude': False})
-            excludedvar.to_csv(os.path.join(
-                app.config['UPLOAD_FOLDER'], 'excludedvar.csv'), index=False)
-            # store file path of excluded variables in session
-            session['excludedvar_filepath'] = os.path.join(
-                app.config['UPLOAD_FOLDER'], 'excludedvar.csv')
-            # create empty dataframe to store new features
-            newfeature = pd.DataFrame({'column': colnames, 'formula': ''})
-            newfeature.to_csv(os.path.join(
-                app.config['UPLOAD_FOLDER'], 'newfeature.csv'), index=False)
-            session['newfeature_filepath'] = os.path.join(
-                app.config['UPLOAD_FOLDER'], 'newfeature.csv')
-            # redirect to numerical descriptions
-            if any([True if t == 'numeric' else False for t in vartype['class']]):
-                return redirect('/numeric')
-            else:
-                return redirect('/categorical')
+                        vartype.loc[vartype['column']
+                                    == col, 'type'] = 'str'
+            # save changes in variable type file
+            vartype.to_csv(session.get(
+                'vartype_filepath'), index=False)
+            vartype_list = list(zip(vartype['column'], vartype['class']))
+            return render_template('datatype.html', df=[html_table], shape=df.shape, vartype=vartype_list, submit='yes')
+    # restart session
+    else:
+        return redirect('/')
 
 
-# Description of numeric variables
+# Description of numerical variables
 @app.route('/numeric', methods=['GET', 'POST'])
 def numeric():
-    # file path
-    file_path = session.get('uploaded_data_file_path')
-    # read data file
-    df = pd.read_csv(file_path)
-    # read variable type file
-    vartype = pd.read_csv(session.get('vartype_filepath'))
-    numericvar = vartype.loc[vartype['class']
-                             == 'numeric', 'column'].values.tolist()
-    # read excluded variable file
-    excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
-    excludedvar = excludedvar_df.loc[excludedvar_df.exclude,
-                                     'column'].values.tolist()
-    # subset dataset
-    selectedvar = [var for var in numericvar if var not in excludedvar]
-    # consider if no numeric variables
-    if len(selectedvar) == 0:
-        nvar = 0
-        df_html = []
-    else:
-        new_df = df[selectedvar].copy()
-        # update variable type
-        for col in selectedvar:
-            if vartype.loc[vartype['column'] == col, 'type'].values[0] == 'int':
-                new_df[col] = new_df[col].astype(numpy.int64)
-            else:
-                new_df[col] = new_df[col].astype(numpy.float64)
-        # summary statistics of variables
-        df_desc = new_df.describe().round(2)
-        nvar = df_desc.shape[1]
-        df_html = [df_desc.to_html(header="true", classes='mystyle')]
+    # current session
+    if request.method == 'POST':
+        # file path
+        file_path = session.get('uploaded_data_file_path')
+        # read data file
+        df = pd.read_csv(file_path)
+        # read variable type file
+        vartype = pd.read_csv(session.get('vartype_filepath'))
+        numericvar = vartype.loc[vartype['class']
+                                 == 'numeric', 'column'].values.tolist()
+        # read excluded variable file
+        excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
 
-    if request.method == 'GET':
-        return render_template('numeric.html', df=df_html, columns=selectedvar, nvar=nvar)
-    else:
-        # removed a variable
-        if request.form.get('remove-numericvar'):
+        # user submitted the form to exclude variable
+        if request.form.get('exclude') == 'Exclude':
+            # update excluded variables file
             col = request.form.get('remove-numericvar')
             excludedvar_df.loc[excludedvar_df.column == col, 'exclude'] = True
-        # reset all exclusions
-        elif request.form.get('reset-numericvar'):
-            excludedvar_df.loc[excludedvar_df.column.isin(numericvar),
-                               'exclude'] = False
-        excludedvar_df.to_csv(session.get('excludedvar_filepath'), index=False)
-        return redirect('/numeric')
+            excludedvar_df.to_csv(session.get(
+                'excludedvar_filepath'), index=False)
+        # user submitted the form to revert all exclusions
+        elif request.form.get('reset') == 'Revert Exclusions':
+            excludedvar_df.loc[excludedvar_df.column.isin(
+                numericvar), 'exclude'] = False
+            excludedvar_df.to_csv(session.get(
+                'excludedvar_filepath'), index=False)
+        excludedvar = excludedvar_df.loc[excludedvar_df.exclude,
+                                         'column'].values.tolist()
+        # subset dataset
+        selectedvar = [var for var in numericvar if var not in excludedvar]
+
+        # no numerical variables
+        if len(selectedvar) == 0:
+            return render_template('numeric.html', nvar=0)
+        else:
+            new_df = df[selectedvar].copy()
+            # update variable type
+            for col in selectedvar:
+                if vartype.loc[vartype['column'] == col, 'type'].values[0] == 'int':
+                    new_df[col] = new_df[col].astype(numpy.int64)
+                else:
+                    new_df[col] = new_df[col].astype(numpy.float64)
+            # summary statistics of variables
+            df_desc = new_df.describe().round(2)
+            df_desc = pd.concat(
+                [df_desc, new_df.isnull().sum(axis=0).to_frame('NA').transpose()])
+            html_table = df_desc.to_html(header=True, classes='table-style')
+            nvar = df_desc.shape[1]
+            return render_template('numeric.html', nvar=nvar, df=html_table, columns=selectedvar)
+    # restart session
+    else:
+        return redirect('/')
 
 
 # Description of categorical variables
 @app.route('/categorical', methods=['GET', 'POST'])
 def categorical():
-    # file path
-    file_path = session.get('uploaded_data_file_path')
-    # read data file
-    df = pd.read_csv(file_path)
-    # read variable type file
-    vartype = pd.read_csv(session.get('vartype_filepath'))
-    categoricalvar = vartype.loc[vartype['class']
-                                 == 'categorical', 'column'].values.tolist()
-    # read excluded variable file
-    excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
-    excludedvar = excludedvar_df.loc[excludedvar_df.exclude,
-                                     'column'].values.tolist()
-    # subset dataset
-    selectedvar = [var for var in categoricalvar if var not in excludedvar]
-    # consider if no categorical variables
-    if len(selectedvar) == 0:
-        nvar = 0
-        df_html = []
-    else:
-        new_df = df[selectedvar].copy()
-        # update variable type
-        for col in selectedvar:
-            new_df[col] = new_df[col].astype(str)
-        # summary statistics of variables
-        df_desc = new_df.describe()
-        df_html = [df_desc.to_html(header="true", classes='mystyle')]
-        nvar = df_desc.shape[1]
+    # current session
+    if request.method == 'POST':
+        # file path
+        file_path = session.get('uploaded_data_file_path')
+        # read data file
+        df = pd.read_csv(file_path)
+        # read variable type file
+        vartype = pd.read_csv(session.get('vartype_filepath'))
+        categoricalvar = vartype.loc[vartype['class']
+                                     == 'categorical', 'column'].values.tolist()
+        # read excluded variable file
+        excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
 
-    if request.method == 'GET':
-        return render_template('categorical.html', df=df_html, columns=selectedvar, nvar=nvar)
-    else:
-        # removed a variable
-        if request.form.get('remove-categoricalvar'):
+        # user submitted the form to exclude variable
+        if request.form.get('exclude') == 'Exclude':
+            # update excluded variables file
             col = request.form.get('remove-categoricalvar')
             excludedvar_df.loc[excludedvar_df.column == col, 'exclude'] = True
-        # reset all exclusions
-        elif request.form.get('reset-categoricalvar'):
-            excludedvar_df.loc[excludedvar_df.column.isin(categoricalvar),
-                               'exclude'] = False
-        excludedvar_df.to_csv(session.get('excludedvar_filepath'), index=False)
-        return redirect('/categorical')
+            excludedvar_df.to_csv(session.get(
+                'excludedvar_filepath'), index=False)
+        # user submitted the form to revert all exclusions
+        elif request.form.get('reset') == 'Revert Exclusions':
+            excludedvar_df.loc[excludedvar_df.column.isin(
+                categoricalvar), 'exclude'] = False
+            excludedvar_df.to_csv(session.get(
+                'excludedvar_filepath'), index=False)
+        excludedvar = excludedvar_df.loc[excludedvar_df.exclude,
+                                         'column'].values.tolist()
+        # subset dataset
+        selectedvar = [var for var in categoricalvar if var not in excludedvar]
+
+        # no categorical variables
+        if len(selectedvar) == 0:
+            return render_template('categorical.html', nvar=0)
+        else:
+            new_df = df[selectedvar].copy()
+            # update variable type
+            for col in selectedvar:
+                new_df[col] = new_df[col].astype(str)
+            # summary statistics of variables
+            df_desc = new_df.describe()
+            str_length = [new_df[col].map(str).apply(
+                len).max() for col in selectedvar]
+            df_desc = pd.concat([df_desc, pd.DataFrame(
+                {'max. length': str_length}, index=selectedvar).transpose()])
+            df_desc = pd.concat(
+                [df_desc, new_df.isnull().sum(axis=0).to_frame('NA').transpose()])
+            html_table = df_desc.to_html(header=True, classes='table-style')
+            nvar = df_desc.shape[1]
+            # categorical variable with length of label exceeding 20
+            long_label = [selectedvar[i]
+                          for i in range(nvar) if str_length[i] > 20]
+            return render_template('categorical.html', nvar=nvar, df=html_table, columns=selectedvar, long_label=long_label)
+    # restart session
+    else:
+        return redirect('/')
 
 
-# Select variable
+# Select variable for univariate visualization
 @app.route('/selectvariable', methods=['GET', 'POST'])
 def selectvariable():
-    # file path
-    file_path = session.get('uploaded_data_file_path')
+    # current session
+    if request.method == 'POST':
+        # read all files
+        vartype_df = pd.read_csv(session.get('vartype_filepath'))
+        excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
+        includedvar = excludedvar_df.loc[~excludedvar_df['exclude'], 'column'].tolist(
+        )
+        # categorical variables
+        categoricalvar = [
+            col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'categorical', 'column'].values]
+        # numerical variables
+        numericvar = [
+            col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'numeric', 'column'].values]
+        ncategorical = len(categoricalvar)
+        nnumeric = len(numericvar)
+
+        # user redirected to selectvariable.html
+        if request.form.get('redirect') == 'selectvariable':
+            types = []
+            if ncategorical > 0:
+                types.append('categorical')
+            if nnumeric > 0:
+                types.append('numeric')
+            # only one variable type available
+            if len(types) == 1:
+                if types[0] == 'numeric':
+                    return render_template('selectvariable.html', types=types, variables=numericvar, submit='no')
+                else:
+                    return render_template('selectvariable.html', types=types, variables=categoricalvar, submit='no')
+            else:
+                return render_template('selectvariable.html', types=types, submit='no')
+        # user submitted the form to select variable type
+        elif request.form.get('submit') == 'Submit':
+            types = [request.form.get('selected-datatype')]
+            # user hasnt select variable
+            if not request.form.get('selected-var'):
+                if types[0] == 'numeric':
+                    return render_template('selectvariable.html', types=types, variables=numericvar, submit='no')
+                else:
+                    return render_template('selectvariable.html', types=types, variables=categoricalvar, submit='no')
+            else:
+                variables = [request.form.get('selected-var')]
+                return render_template('selectvariable.html', types=types, variables=variables, submit='yes')
+    # restart session
+    else:
+        return redirect('/')
+
+
+# Univariate plot
+@app.route('/univariateplot', methods=['GET', 'POST'])
+def univariateplot():
+    # user redirected to univariateplot.html
+    if request.method == 'POST':
+        # selected variable
+        selectedvar = request.form.get('selected-var')
+        # selected plot type
+        selectedplot = request.form.get('plottype')
+
+        # read all files
+        df = pd.read_csv(session.get('uploaded_data_file_path'))
+        vartype_df = pd.read_csv(session.get('vartype_filepath'))
+        # subset dataset
+        varclass = vartype_df.loc[vartype_df['column']
+                                  == selectedvar, 'class'].values[0]
+        vartype = vartype_df.loc[vartype_df['column']
+                                 == selectedvar, 'type'].values[0]
+        var_df = df[[selectedvar]].copy()
+        var_df[selectedvar] = var_df[selectedvar].astype(vartype)
+
+        # buffer to store image file
+        buf = BytesIO()
+        # empty canvas for plotting
+        fig = plt.figure(figsize=(6, 4))
+        ax = fig.add_subplot()
+
+        # numeric variable
+        if varclass == 'numeric':
+            # density plot
+            if selectedplot == 'densityplot':
+                dp = ax.hist(var_df, 100, density=True,
+                             histtype='stepfilled', facecolor='#5c729f', alpha=0.75)
+                var_df[selectedvar].plot.kde(zorder=2, color='#5c729f')
+                ax.set_xlim(var_df[selectedvar].min(),
+                            var_df[selectedvar].max())
+                ax.set_xlabel(selectedvar)
+                plt.title('Density Plot')
+            # default boxplot
+            else:
+                bp = ax.boxplot(var_df, vert=False, patch_artist=True)
+                bp['boxes'][0].set_facecolor('#5c729f')
+                bp['medians'][0].set(color='black')
+                ax.set_yticklabels([''])
+                ax.set_xlabel(selectedvar)
+                plt.title('Box Plot')
+        # categorical variable
+        else:
+            # count of items
+            count_df = var_df.value_counts().rename_axis(
+                selectedvar).reset_index(name='counts')
+            color_values = get_color(count_df.shape[0])
+            # pie chart
+            if selectedplot == 'piechart':
+                wedges, texts = ax.pie(count_df['counts'],
+                                       labels=[calculate_percentage(
+                                           v, count_df['counts']) for v in count_df['counts']],
+                                       labeldistance=1.05,
+                                       colors=color_values,
+                                       wedgeprops=dict(edgecolor='w', alpha=0.75))
+                ax.legend(wedges,
+                          labels=count_df[selectedvar],
+                          title=selectedvar,
+                          loc="upper left",
+                          bbox_to_anchor=(1, 1))
+                plt.title('Pie Chart')
+            # bar plot
+            else:
+                ax.barh(count_df[selectedvar], count_df['counts'],
+                        color=color_values, alpha=0.75)
+                ax.set_ylabel(selectedvar)
+                plt.title('Bar Plot')
+
+        plt.tight_layout()
+        plt.savefig(buf, format='png')
+        plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
+        return render_template('univariateplot.html', var=selectedvar, varclass=varclass, selectedplot=selectedplot, plot_url=plot_url)
+    # restart session
+    else:
+        return redirect('/')
+
+
+# Data Transformation
+@app.route('/datatransform', methods=['GET', 'POST'])
+def datatransform():
     # read all files
+    df = pd.read_csv(session.get('uploaded_data_file_path'))
     vartype_df = pd.read_csv(session.get('vartype_filepath'))
     excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
-    includedvar = excludedvar_df.loc[~excludedvar_df['exclude'], 'column'].tolist(
+
+    includedvar = excludedvar_df.loc[~excludedvar_df.exclude, 'column'].tolist(
     )
-    # categorical variables
-    categoricalvar = [
-        col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'categorical', 'column'].values]
-    # numeric variables
-    numericvar = [
-        col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'numeric', 'column'].values]
 
     if request.method == 'GET':
-        return render_template('selectvariable.html', selectedtype=None, varoptions=None, ncategorical=len(categoricalvar), nnumeric=len(numericvar))
-    else:
-        selectedtype = request.form.get('selected-datatype')
-        if selectedtype == 'numeric':
-            return render_template('selectvariable.html', selectedtype=selectedtype, varoptions=numericvar, ncategorical=len(categoricalvar), nnumeric=len(numericvar))
+        if request.args.get('selected-var1'):
+            selectedvar = request.args.get('selected-var1')
+            vartype = vartype_df.loc[vartype_df['column']
+                                     == selectedvar, 'class'].values[0]
+            if request.args.get('selected-method'):
+                selectedmethod = request.args.get('selected-method')
+
+                if selectedmethod == "Take_log":
+                    newvar = selectedvar + '_log'
+                    df[newvar] = numpy.log(df[selectedvar])
+                    new_row = {'column': newvar,
+                               'class': 'numeric', 'type': 'float'}
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+
+                if selectedmethod == "Take_exponential":
+                    newvar = selectedvar + '_exp'
+                    df[newvar] = numpy.exp(df[selectedvar])
+                    new_row = {'column': newvar,
+                               'class': 'numeric', 'type': 'float'}
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+
+                if selectedmethod == "Min-Max_Scaler":
+                    scaler = MinMaxScaler()
+                    newvar = selectedvar + '_minmaxscaler'
+                    df[newvar] = scaler.fit_transform(
+                        df[selectedvar].values.reshape(-1, 1))
+                    new_row = {'column': newvar,
+                               'class': 'numeric', 'type': 'float'}
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+
+                if selectedmethod == "Standardization":
+                    scaler = StandardScaler()
+                    newvar = selectedvar + '_stdscaler'
+                    df[newvar] = scaler.fit_transform(
+                        df[selectedvar].values.reshape(-1, 1))
+                    new_row = {'column': newvar,
+                               'class': 'numeric', 'type': 'float'}
+
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+
+                if selectedmethod == "Binning":
+                    session['method'] = selectedmethod
+                    session['variable'] = selectedvar
+                    return render_template("binning.html", method=selectedmethod, selectedvar=selectedvar, done='No')
+
+                if selectedmethod == "Rename_label":
+                    session['method'] = selectedmethod
+                    session['variable'] = selectedvar
+                    labels = df[selectedvar].unique()
+                    return render_template("rename_label.html", method=selectedmethod, selectedvar=selectedvar, done='No', labels=labels)
+
+                return render_template('newfeature.html', vars=None, method=selectedmethod, selectedvar=selectedvar, newcreated=newvar)
+            else:
+                return render_template('newfeature.html', vars=None, method=None, selectedvar=selectedvar, vartype=vartype, options=generate_formula(vartype))
         else:
-            return render_template('selectvariable.html', selectedtype=selectedtype, varoptions=categoricalvar, ncategorical=len(categoricalvar), nnumeric=len(numericvar))
+            return render_template('newfeature.html', vars=includedvar)
+
 
 # Select multivariable
-
-
 @app.route('/selectmultivar', methods=['GET', 'POST'])
 def selectmultivar():
 
@@ -375,85 +590,10 @@ def selectmultivar():
     return render_template('selectmultivar.html', xs=includedvar, ys=numericvar, groups=categoricalvar)
 
 
-# Univariate plot
-@app.route('/univariateplot', methods=['GET', 'POST'])
-def univariateplot():
-    # file path
-    file_path = session.get('uploaded_data_file_path')
-    # read all files
-    df = pd.read_csv(file_path)
-    vartype_df = pd.read_csv(session.get('vartype_filepath'))
-
-    if request.method == 'GET':
-        if request.args.get('selected-var'):
-            selectedvar = request.args.get('selected-var')
-            varclass = vartype_df.loc[vartype_df['column']
-                                      == selectedvar, 'class'].values[0]
-            vartype = vartype_df.loc[vartype_df['column']
-                                     == selectedvar, 'type'].values[0]
-            var_df = df[[selectedvar]].copy()
-            var_df[selectedvar] = var_df[selectedvar].astype(vartype)
-            # buffer to store image file
-            buf = BytesIO()
-            # empty canvas for plotting
-            fig = plt.figure(figsize=(6, 4))
-            ax = fig.add_subplot()
-
-            # numeric variable
-            if varclass == 'numeric':
-                # density plot
-                if request.args.get('plottype') == 'densityplot':
-                    dp = ax.hist(
-                        var_df, 100, density=True, histtype='stepfilled', facecolor='#5c729f', alpha=0.75)
-                    var_df[selectedvar].plot.kde(zorder=2, color='#5c729f')
-                    ax.set_xlim(var_df[selectedvar].min(),
-                                var_df[selectedvar].max())
-                    ax.set_xlabel(selectedvar)
-                    plt.title('Density Plot')
-                # default boxplot
-                else:
-                    bp = ax.boxplot(var_df, vert=False,
-                                    patch_artist=True)
-                    bp['boxes'][0].set_facecolor('#5c729f')
-                    bp['medians'][0].set(color='black')
-                    ax.set_yticklabels([''])
-                    ax.set_xlabel(selectedvar)
-                    plt.title('Box Plot')
-            # categorical variable
-            else:
-                # count of items
-                count_df = var_df.value_counts().rename_axis(
-                    selectedvar).reset_index(name='counts')
-                color_values = get_color(count_df.shape[0])
-                # pie chart
-                if request.args.get('plottype') == 'piechart':
-                    wedges, texts = ax.pie(count_df['counts'],
-                                           labels=[calculate_percentage(
-                                               v, count_df['counts']) for v in count_df['counts']],
-                                           labeldistance=1.05,
-                                           colors=color_values,
-                                           wedgeprops=dict(edgecolor='w', alpha=0.75))
-                    ax.legend(wedges,
-                              labels=count_df[selectedvar],
-                              title=selectedvar,
-                              loc="upper left",
-                              bbox_to_anchor=(1, 1))
-                    plt.title('Pie Chart')
-                # bar plot
-                else:
-                    ax.barh(count_df[selectedvar], count_df['counts'],
-                            color=color_values, alpha=0.75)
-                    ax.set_ylabel(selectedvar)
-                    plt.title('Bar Plot')
-
-            plt.tight_layout()
-            plt.savefig(buf, format='png')
-            plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
-            return render_template('univariateplot.html', var=selectedvar, varclass=varclass, plot_url=plot_url)
-
-
 # Multivariate plot
 # https://www.kaggle.com/code/alokevil/simple-eda-for-beginners
+
+
 @app.route('/multivariateplot', methods=['GET', 'POST'])
 def multivariateplot():
     x = request.form.get('selected_x')
@@ -532,80 +672,6 @@ def multivariateplot():
     return render_template('multivariateplot.html', plot_url=plot_url)
 
 
-# Feature engineering
-@app.route('/newfeature', methods=['GET', 'POST'])
-def newfeature():
-    # read all files
-    df = pd.read_csv(session.get('uploaded_data_file_path'))
-    vartype_df = pd.read_csv(session.get('vartype_filepath'))
-    excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
-
-    includedvar = excludedvar_df.loc[~excludedvar_df.exclude, 'column'].tolist(
-    )
-
-    if request.method == 'GET':
-        if request.args.get('selected-var1'):
-            selectedvar = request.args.get('selected-var1')
-            vartype = vartype_df.loc[vartype_df['column']
-                                     == selectedvar, 'class'].values[0]
-            if request.args.get('selected-method'):
-                selectedmethod = request.args.get('selected-method')
-
-                if selectedmethod == "Take_log":
-                    newvar = selectedvar + '_log'
-                    df[newvar] = numpy.log(df[selectedvar])
-                    new_row = {'column': newvar,
-                               'class': 'numeric', 'type': 'float'}
-                    write_files(df, vartype_df, excludedvar_df,
-                                new_row, newvar)
-
-                if selectedmethod == "Take_exponential":
-                    newvar = selectedvar + '_exp'
-                    df[newvar] = numpy.exp(df[selectedvar])
-                    new_row = {'column': newvar,
-                               'class': 'numeric', 'type': 'float'}
-                    write_files(df, vartype_df, excludedvar_df,
-                                new_row, newvar)
-
-                if selectedmethod == "Min-Max_Scaler":
-                    scaler = MinMaxScaler()
-                    newvar = selectedvar + '_minmaxscaler'
-                    df[newvar] = scaler.fit_transform(
-                        df[selectedvar].values.reshape(-1, 1))
-                    new_row = {'column': newvar,
-                               'class': 'numeric', 'type': 'float'}
-                    write_files(df, vartype_df, excludedvar_df,
-                                new_row, newvar)
-
-                if selectedmethod == "Standardization":
-                    scaler = StandardScaler()
-                    newvar = selectedvar + '_stdscaler'
-                    df[newvar] = scaler.fit_transform(
-                        df[selectedvar].values.reshape(-1, 1))
-                    new_row = {'column': newvar,
-                               'class': 'numeric', 'type': 'float'}
-
-                    write_files(df, vartype_df, excludedvar_df,
-                                new_row, newvar)
-
-                if selectedmethod == "Binning":
-                    session['method'] = selectedmethod
-                    session['variable'] = selectedvar
-                    return render_template("binning.html", method=selectedmethod, selectedvar=selectedvar, done='No')
-
-                if selectedmethod == "Rename_label":
-                    session['method'] = selectedmethod
-                    session['variable'] = selectedvar
-                    labels = df[selectedvar].unique()
-                    return render_template("rename_label.html", method=selectedmethod, selectedvar=selectedvar, done='No', labels=labels)
-
-                return render_template('newfeature.html', vars=None, method=selectedmethod, selectedvar=selectedvar, newcreated=newvar)
-            else:
-                return render_template('newfeature.html', vars=None, method=None, selectedvar=selectedvar, vartype=vartype, options=generate_formula(vartype))
-        else:
-            return render_template('newfeature.html', vars=includedvar)
-
-
 @app.route('/binning', methods=['GET', 'POST'])
 def bin():
     # read all files
@@ -656,40 +722,3 @@ def relabel():
         'uploaded_data_file_path'), index=False)
 
     return render_template('rename_label.html', method=selectedmethod, selectedvar=selectedvar, done='Yes')
-
-
-@app.route('/basics', methods=['GET', 'POST'])
-def basics():
-    # file path
-    file_path = session.get('uploaded_data_file_path')
-    # temp file [to be removed after web is built]
-    temp_filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'temp.csv')
-
-    # if no variable to delete
-    if app.config['FLAG_CHANGE_DATA'] == 0:
-        df = pd.read_csv(file_path)  # read original file
-        df_desc = df.describe().round(2)
-    # if need to delete
-    else:
-        df = pd.read_csv(file_path)  # read original file
-        # read temp description file
-        df_desc = pd.read_csv(temp_filepath, index_col=0)
-
-    if request.method == 'GET':
-        return render_template('basics.html', shape=df.shape, tables=[df_desc.to_html(header="true", classes='mystyle')], cols=df_desc.columns)
-    else:
-        rvar = request.form.get('rvar')
-        # if need to remove variable
-        if rvar is not None:
-            # remove variable
-            df_desc.drop(rvar, axis=1, inplace=True)
-            # store in temp file
-            df_desc.to_csv(tempfile)
-            app.config['FLAG_CHANGE_DATA'] = 1
-            return render_template('basics.html', shape=df.shape, tables=[df_desc.to_html(header="true", classes='mystyle')], cols=df_desc.columns)
-        # reset
-        else:
-            app.config['FLAG_CHANGE_DATA'] = 0
-            df = pd.read_csv(file_path)
-            df_desc = df.describe().round(2)
-            return render_template('basics.html', shape=df.shape, tables=[df_desc.to_html(header="true", classes='mystyle')], cols=df_desc.columns)

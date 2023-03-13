@@ -1,68 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "BASE.html" %}
 
-<head>
-    <title>CS50 Project</title>
-    <link rel="stylesheet" href="/static/style.css" />
-</head>
-
-<body>
-    <!-- Page content -->
+{% block content %}
+<div>
+    <!-- Introduction-->
+    <h1 id="page-title">Univariate Visualization</h1>
+    <!-- Plot -->
     <div>
-        <h1>Univariate Visualisation</h1>
-        <p>Let's look at the graphical representation of {{var}}.</p>
-        <!-- select plot type -->
-        <div>
-            <form method="GET" action="/univariateplot">
-                <input type="hidden" value={{var}} name="selected-var" />
-                <div>
-                    <label for="plottype">Select plot type:</label>
-                    <select required name="plottype" id="plottype">
-                        {% if varclass == "numeric" %}
-                        <option value="boxplot">Box Plot</option>
-                        <option value="densityplot">Density Plot</option>
-                        {% else %}
-                        <option value="barplot">Bar Plot</option>
-                        <option value="piechart">Pie Chart</option>
-                        {% endif %}
-                    </select>
-                </div>
-                <input type="submit" value="Submit">
-            </form>
-
-        </div>
-        <!-- plot -->
-        <div>
-            <img src='data:image/png;base64,{{plot_url}}' />
-        </div>
-        <!-- choose another variable -->
-        <br>
-        <div>
-            <form method="GET" action="/selectvariable">
-                <input type="submit" value="Choose another variable">
-            </form>
-        </div>
-        <!-- go to feature engineering -->
-        <br>
-        <div>
-            <p>Click here to proceed to the next step.</p>
-            <form method="GET" action="/newfeature">
-                <input type="submit" value="Go">
-            </form>
-        </div>
-        <br>
-        <div>
-            <!-- back to summary statistics -->
-            <form method="GET" action="/numeric">
-                <input type="submit" value="Back to Summary Statistics">
-            </form>
-            <br>
-            <!-- reset button -->
-            <form method="GET" action="/">
-                <input type="submit" value="Reset">
-            </form>
-        </div>
+        <!-- Plot type -->
+        {% if varclass == "numeric" %}
+        {% if selectedplot=="boxplot" %}
+        <p>The default graphical representation of numerical variable is <b>boxplot</b>. It displays key summary
+            statistics such as minimum, maximum, first quartile, median and third quartile.</p>
+        <p>In the box plot, a box is drawn from the first quartile (25%) to the third quartile (75%), a vertical line
+            cuts through the box at the median (50%). The outliers are plotted outside the whiskers. Outlier is defined
+            as any observation that falls outside of 1.5times the interquartile range.</p>
+        <form method="POST" action="/univariateplot" id="inline-form">
+            <input type="hidden" name="selected-var" value={{var}}>
+            <input type="hidden" name="plottype" value="densityplot">
+            <input style="color: green" type="submit" value="Click here for density plot.">
+        </form>
+        {% else %}
+        <p>The <b>density plot</b> shows the estimated probability density function of the numerical variable overlay on
+            the histogram.</p>
+        <p>The range of data is divided into 100 equal-width bins. The height of each bar represents the proportion of
+            data that falls in the bin. The area under the density function will integrate to 1. The density function
+            shows the mean, spread as well as skewness of the data.</p>
+        <form method="POST" action="/univariateplot" id="inline-form">
+            <input type="hidden" name="selected-var" value={{var}}>
+            <input type="hidden" name="plottype" value="boxplot">
+            <input style="color: green" type="submit" value="Click here for boxplot.">
+        </form>
+        {% endif %}
+        {% else %}
+        {% if selectedplot=="barplot" %}
+        <p>The default graphical representation of categorical variable is <b>bar plot</b>. The bar plot describes the
+            frequency of each category label. The length of each bar represents the count of label in the data.</p>
+        <form method="POST" action="/univariateplot" id="inline-form">
+            <input type="hidden" name="selected-var" value={{var}}>
+            <input type="hidden" name="plottype" value="piechart">
+            <input style="color: green" type="submit" value="Click here for pie chart.">
+        </form>
+        {% else %}
+        <p>The <b>pie chart</b> shows relative percentage of each category label. The size of each wedge is
+            proportionate to the percentage of category label in the data.</p>
+        <form method="POST" action="/univariateplot" id="inline-form">
+            <input type="hidden" name="selected-var" value={{var}}>
+            <input type="hidden" name="plottype" value="barplot">
+            <input style="color: green" type="submit" value="Click here for bar plot.">
+        </form>
+        {% endif %}
+        {% endif %}
+        <!-- Plot image -->
+        <img src='data:image/png;base64,{{plot_url}}' />
+        <!-- Message -->
+        {% if varclass == "numeric" %}
+        <p style="color: red">Note: Examine the range of values in numerical data to identify anomalies. For example,
+            age variable cannot
+            take negative values.</p>
+        {% else %}
+        <p style="color: red">Note: Consider renaming label to more meaningful and concise (less than 20 characters)
+            category label.
+            Category labels with low count can be merged into new group.</p>
+        {% endif %}
     </div>
-</body>
-
-</html>
+</div>
+{% endblock %}

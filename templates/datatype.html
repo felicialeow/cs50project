@@ -1,56 +1,87 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "BASE.html" %}
 
-<head>
-    <title>CS50 Project</title>
-    <link rel="stylesheet" href="/static/style.css" />
-    <script src="../static/jquery-3.6.0.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
-
-<body>
-    <!-- Page content -->
+{% block content %}
+<div>
+    <!-- Introduction -->
+    <h1 id="page-title">Data Structure</h1>
+    <p>The data contains {{shape[1]}} columns and {{shape[0]}} observations. Below is a snippet of the first 5 rows in
+        the data:</p>
+    <!-- First 5 rows -->
     <div>
-        <h1>Data Structure</h1>
-        <p>Let's begin to understand the dataset! The dataset has {{shape[0]}} rows and {{shape[1]}} columns.</p>
-        <!-- show data structure (top 5 rows)-->
-        <div>
-            <p>Top 5 observations of the dataset:</p>
-            <table>
-                {% for table in df %}
-                {{ table|safe }}
-                {% endfor %}
-            </table>
-        </div>
-        <!-- variable type -->
-        <div>
-            <p>Determine the data type for each variable before we proceed to the next stage.</p>
-            <form method="POST" action="/datatype">
-                {% for col in vartype %}
-                <div>
-                    <label for={{col[0]}}>{{col[0]}}</label>
-                    <select required name={{col[0]}} id={{col[0]}}>
-                        {% if col[1] == "numeric" %}
-                        <option value="numeric">Numeric</option>
-                        <option value="categorical">Categorical</option>
-                        {% else %}
-                        <option value="categorical">Categorical</option>
-                        <option value="numeric">Numeric</option>
-                        {% endif %}
-                    </select>
-                </div>
-                {% endfor %}
-                <input type="submit" value="Submit">
-            </form>
-        </div>
-        <!-- reset button -->
-        <br>
-        <div>
-            <form method="GET" action="/">
-                <input type="submit" value="Back to Data Upload">
-            </form>
-        </div>
+        <table>
+            {% for table in df %}
+            {{ table|safe }}
+            {% endfor %}
+        </table>
     </div>
-</body>
-
-</html>
+    <br>
+    <!-- Set variable type -->
+    <div>
+        <h2 id="header2">Variable Type</h2>
+        <p>There are two main types of data: categorical and numerical. Categorical data can be put into groups using
+            labels. Examples are gender, race and education status. Numerical data are used to measure age, height,
+            weight, etc. Some data such as rating score can be treated as either categorical or numerical, depending on
+            context.
+        </p>
+        <p>The summary statistics and visualization methods used are different for each variable type.
+            <span>
+                {% if submit == "no" %}
+                Please select how each variable should be treated:
+                {% endif %}
+            </span>
+        </p>
+        <!-- initial page -->
+        {% if submit == "no" %}
+        <form method="POST" action="/datatype">
+            <table class="table-style2">
+                <tbody>
+                    {% for col in vartype %}
+                    <tr>
+                        <td>
+                            <label for={{col[0]}}>{{col[0]}}</label>
+                        </td>
+                        <td>
+                            <select required name={{col[0]}} id={{col[0]}}>
+                                {% if col[1] == "numeric" %}
+                                <option value="numeric">Numerical</option>
+                                <option value="categorical">Categorical</option>
+                                {% else %}
+                                <option value="categorical">Categorical</option>
+                                <option value="numeric">Numerical</option>
+                                {% endif %}
+                            </select>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <input type="submit" value="Submit">
+        </form>
+        <!-- form submitted -->
+        {% else %}
+        <table border="1" class="table-style3">
+            <tbody>
+                {% for col in vartype %}
+                <tr>
+                    <td>{{col[0]}}</td>
+                    <td>
+                        {% if col[1] == "numeric" %}
+                        Numerical
+                        {% else %}
+                        Categorical
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        <form method="POST" action="/datatype">
+            <input type="hidden" name="reset" value="datatype">
+            <input type="hidden" name="redirect" value="datatype">
+            <input type="submit" value="Reset Variable Type">
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

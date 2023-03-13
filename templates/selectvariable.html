@@ -1,79 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "BASE.html" %}
 
-<head>
-    <title>CS50 Project</title>
-    <link rel="stylesheet" href="/static/style.css" />
-</head>
-
-<body>
-    <!-- Page content -->
+{% block content %}
+<div>
+    <!-- Introduction-->
+    <h1 id="page-title">Univariate Visualization</h1>
+    <p>The univariate visualization provides a more complete picture of the data than non-graphical methods. It is
+        quicker to understand the distribution of data as well as to identify outliers and anomalies.</p>
+    <!-- Select variable type -->
     <div>
-        <h1>Univariate Visualisation</h1>
-        <p>Let's look at the graphical representation of each variable.</p>
-        <!-- select variable type -->
-        {% if selectedtype == None and varoptions == None %}
-        <div>
-            <form method="POST" action="/selectvariable">
-                <div>
-                    {% if nnumeric == 0 %}
-                    <input type="radio" name="selected-datatype" value="numeric" id="numeric" disabled>
-                    {% else %}
-                    <input type="radio" name="selected-datatype" value="numeric" id="numeric" checked>
-                    {% endif %}
-                    <label for="numeric">Numeric</label>
-                    {% if ncategorical == 0 %}
-                    <input type="radio" name="selected-datatype" value="categorical" id="categorical" disabled>
-                    {% else %}
-                    <input type="radio" name="selected-datatype" value="categorical" id="categorical">
-                    {% endif %}
-                    <label for="categorical">Categorical</label>
-                </div>
-                <button type="submit">Select variable type</button>
-            </form>
-        </div>
+        {% if submit == "no" %}
+        <p>Select a variable to study it's univariate plot:</p>
+        <form method="POST" action="/selectvariable">
+            <div>
+                <label for="selected-datatype">Variable type:</label>
+                {% if types|length == 2 %}
+                <input type="radio" name="selected-datatype" value="numeric" id="numeric">
+                <label for="numeric">Numerical</label>
+                <input type="radio" name="selected-datatype" value="categorical" id="categorical">
+                <label for="categorical">Categorical</label>
+                {% elif (types|length == 1) and (types[0] == "numeric") %}
+                <input type="radio" name="selected-datatype" value="numeric" checked id="numeric">
+                <label for="numeric">Numerical</label>
+                {% else %}
+                <input type="radio" name="selected-datatype" value="categorical" checked id="categorical">
+                <label for="categorical">Categorical</label>
+                {% endif %}
+            </div>
+            <div>
+                {% if variables %}
+                <label for="selected-var">Variable:</label>
+                <select required name="selected-var" id="selected-var">
+                    {% for var in variables %}
+                    <option value={{var}}>{{var}}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+            </div>
+            <input type="submit" name="submit" value="Submit">
+        </form>
         {% else %}
-        <!-- select variable to plot chart -->
-        <div>
-            <form method="GET" action="/univariateplot">
-                <p>Variable Type: {{selectedtype|capitalize}}</p>
-                <div>
-                    <label for="selected-var">Variable:</label>
-                    <select required name="selected-var" id="selected-var">
-                        {% for var in varoptions %}
-                        <option value={{var}}>{{var}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <input type="submit" value="Submit">
-            </form>
-        </div>
+        <form method="POST" action="/univariateplot">
+            <div>
+                <p>Variable type:
+                    <b>
+                        {% if types[0] == "numeric" %}
+                        Numerical
+                        {% else %}
+                        Categorical
+                        {% endif %}
+                    </b>
+                </p>
+                {% if types[0] == "numeric" %}
+                <input type="hidden" name="plottype" value="boxplot">
+                {% else %}
+                <input type="hidden" name="plottype" value="barplot">
+                {% endif %}
+            </div>
+            <div>
+                <p>Variable: <b>{{variables[0]}}</b></p>
+                <input type="hidden" name="selected-var" value={{variables[0]}}>
+            </div>
+            <input type="submit" name="redirect" value="Plot">
+        </form>
         {% endif %}
-        <div>
-            <!-- skip to feature engineering -->
-            <br>
-            <form method="GET" action="/newfeature">
-                <input type="submit" value="Go to Feature Engineering">
-            </form>
-
-            <!-- skip to multivariate plot -->
-            <br>
-            <form method="GET" action="/selectmultivar">
-                <input type="submit" value="Go to Multivariate Plot">
-            </form>
-
-            <!-- back to summary statistics -->
-            <br>
-            <form method="GET" action="/numeric">
-                <input type="submit" value="Back to Summary Statistics">
-            </form>
-            <!-- reset button -->
-            <br>
-            <form method="GET" action="/">
-                <input type="submit" value="Reset">
-            </form>
-        </div>
     </div>
-</body>
 
-</html>
+
+
+
+
+    <!--
+    <div>
+        <br>
+        <form method="GET" action="/newfeature">
+            <input type="submit" value="Go to Feature Engineering">
+        </form>
+
+        <br>
+        <form method="GET" action="/selectmultivar">
+            <input type="submit" value="Go to Multivariate Plot">
+        </form>
+    </div>
+    -->
+</div>
+{% endblock %}

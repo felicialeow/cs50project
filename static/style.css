@@ -1,26 +1,107 @@
-.centered {
-    text-align: center;
+#page-title {
+    font-family: 'Ubuntu', sans-serif;
 }
 
-.mystyle {
-    font-size: 11pt;
-    font-family: Arial;
+#page-content {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.8em;
+    margin: 1em 2em;
+}
+
+#header2 {
+    font-family: 'Ubuntu', sans-serif;
+    font-weight: 200;
+    font-size: 1.5rem;
+}
+
+/* floating buttons */
+#menu {
+    top: 20px;
+    right: 100px;
+    float: right;
+    position: absolute;
+    z-index: 2;
+}
+
+#navigation {
+    top: 60px;
+    right: 10px;
+    float: right;
+    position: absolute;
+    z-index: 2;
+    padding-top: 10px;
+    background-color: white;
+    border: 1px solid #717e8b;
+}
+
+#navigation-item {
+    list-style: none;
+    padding-left: 0;
+}
+
+#navigation-item input[type=submit] {
+    border: none;
+    text-decoration: none;
+    background-color: white;
+}
+
+#reset {
+    top: 20px;
+    right: 35px;
+    float: right;
+    position: absolute;
+    z-index: 2;
+}
+
+/* table styling */
+.table-style {
     border-collapse: collapse;
     border: 1px solid silver;
     text-align: center;
-
 }
 
-.mystyle td,
-th {
+.table-style thead {
+    background-color: #d8d8d8;
+}
+
+.table-style thead th {
+    text-align: center;
     padding: 5px;
 }
 
-.mystyle tr:nth-child(even) {
-    background: #E0E0E0;
+.table-style tbody td {
+    padding: 2px;
 }
 
-.mystyle tr:hover {
-    background: silver;
-    cursor: pointer;
+.table-style tbody th {
+    padding: 5px;
+}
+
+.table-style tr:hover {
+    background-color: #ececec;
+}
+
+.table-style td:hover {
+    background-color: #e2e2e2;
+}
+
+.table-style2 tbody td {
+    padding: 0px 10px;
+}
+
+.table-style3 {
+    border-collapse: collapse;
+    border: 1px solid silver;
+}
+
+.table-style3 tbody td {
+    padding: 2px 10px;
+}
+
+/* inline navigation */
+#inline-form input[type=submit] {
+    border: none;
+    text-decoration: none;
+    background-color: transparent;
+    padding: 1px 0px;
 }

@@ -1,53 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "BASE.html" %}
 
-<head>
-    <title>CS50 Project</title>
-    <link rel="stylesheet" href="/static/style.css" />
-</head>
-
-<body>
-    <!-- Page content -->
+{% block content %}
+<div>
+    <!-- Introduction -->
+    <h1 id="page-title">Data Exploratory Tool</h1>
+    <p>Exploratory Data Analysis (<b>EDA</b>) is an approach to analyze and investigate data. It helps to discover
+        trends, patterns and abnormalities in the data using statistical summary and visualization methods.</p>
+    <p>We have created a simple web tool that helps you in the process of EDA. Let's begin by uploading a CSV data set!
+    </p>
+    <br>
+    <!-- File upload -->
     <div>
-        <h1>CS50 Project</h1>
-        <p>web tool to create simple visualization</p>
-        <!-- File upload -->
-        <div>
-            {% if success == "initial" or success == "no" %}
-            <h2>Upload your CSV file:</h2>
-            <form method="POST" action="/" enctype="multipart/form-data">
-                <input required type="file" name="uploaded-file" accept=".csv">
-                <input type="submit" value="Upload">
-            </form>
-            {% endif %}
-        </div>
-        <!-- Success message -->
-        <div>
-            {% if success == "initial" %}
-            <p></p>
-            <!-- successful upload-->
-            {% elif success == "yes" %}
-            <div>
-                <p>Data file successfully uploaded</p>
-                <form method="GET" action="/datatype">
-                    <input type="submit" value="Start Explanatory Data Analysis">
-                </form>
-                <!-- reset button -->
-                <br>
-                <form method="POST" action="/">
-                    <input type="hidden" name="back" value="true">
-                    <input type="submit" value="Reset">
-                </form>
-            </div>
-            <!-- unsuccessful upload -->
-            {% else %}
-            <div>
-                <p>Data file upload is unsuccessful.</p>
-                <p>Please check data structure - .csv file with at least 2 rows and 2 columns</p>
-            </div>
-            {% endif %}
-        </div>
+        {% if success == "initial" or success == "no" %}
+        <form method="POST" action="/" enctype="multipart/form-data">
+            <input required type="file" name="uploaded-file" accept=".csv">
+            <input type="submit" value="Upload">
+        </form>
+        {% endif %}
     </div>
-</body>
-
-</html>
+    <!-- Upload message -->
+    <div>
+        <!-- initial page -->
+        {% if success == "initial" %}
+        <p></p>
+        <!-- successful upload-->
+        {% elif success == "yes" %}
+        <div>
+            <p style="color: green">Data file successfully uploaded.</p>
+            <form method="POST" action="/datatype">
+                <input type="hidden" name="redirect" value="datatype">
+                <input type="submit" value="Let's Begin">
+            </form>
+        </div>
+        <!-- unsuccessful upload -->
+        {% else %}
+        <div>
+            <p style="color: red">Data file upload is unsuccessful.</p>
+            <p>Please check data structure:</p>
+            {% for error in messages %}
+            <ul>
+                <li>{{error}}</li>
+            </ul>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
