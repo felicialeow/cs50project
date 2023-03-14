@@ -1,0 +1,198 @@
+{% extends "BASE.html" %}
+
+{% block content %}
+<div>
+    <!-- Introduction -->
+    <h1 id="page-title">Data Transformation</h1>
+    <p>Variable: <b>{{selectedvar}}</b></p>
+    <p>Method: <b>{{selectedmethod}}</b></p>
+    <!-- Transformed data -->
+    {% if (selectedmethod == "Log-transformation") or (selectedmethod == "Exponential-transformation") or
+    (selectedmethod == "Standardization") %}
+    {% if message %}
+    <div>
+        <p style="color: red">{{message}}</p>
+    </div>
+    {% else %}
+    <div>
+        <p>The plots below compare the distribution of data before and after {{selectedmethod}}.</p>
+        <img src='data:image/png;base64,{{plot_url}}' />
+    </div>
+    {% endif %}
+    {% elif (selectedmethod == "Min-Max_Scaler") %}
+    <div>
+        <p>The box plots below compare the range of values before and after {{selectedmethod}}.</p>
+        <img src='data:image/png;base64,{{plot_url}}' />
+    </div>
+    {% elif (selectedmethod == "Binning") %}
+    <div>
+        {% if submit == "no" %}
+        <p style="margin: 0px">Range of values</p>
+        <ul class="unstyle-list">
+            <li>Minimum: {{range[0]}}</li>
+            <li>Maximum: {{range[2]}}</li>
+        </ul>
+        <p>Please provide the cutting point(s) for binning. If more than one cutting point is given, use comma between
+            each number. Numbers should be listed in ascending order.</p>
+        <p>Example: {{range[1]}} will bin the values into two groups, [{{range[0]}}-{{range[1]}}], ({{range[1]}},
+            {{range[2]}}]</p>
+        {% if message %}
+        <ul class="unstyle-list">
+            {% for error in message %}
+            <li style="color: red">{{error}}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <form method="POST" action="/datatransformed">
+            <input type="hidden" name="selected-var" value={{selectedvar}}>
+            <input type="hidden" name="selected-method" value={{selectedmethod}}>
+            <input required name="cut" placeholder="eg: 1,5,10" id="cut" autocomplete="off">
+            <input type="submit" value="Submit">
+        </form>
+        {% else %}
+        <p style="margin: 0px">The newly created categorical variable from binning {{selectedvar}} has following labels:
+        </p>
+        <table border="1" class="dataframe table-style3">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label in labels %}
+                <tr>
+                    <td>{{label[0]}}</td>
+                    <td>{{label[1]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <form method="POST" action="/datatransformed" id="inline-form">
+            <input type="hidden" name="selected-var" value={{newvar}}>
+            <input type="hidden" name="selected-method" value="Renaming_Label">
+            <input type="hidden" name="binning" value="yes">
+            <input type="submit" value="Click here to rename labels" style="color: green">
+        </form>
+        {% endif %}
+    </div>
+    {% elif (selectedmethod == "Renaming_Label") %}
+    <div>
+        {% if submit == "no" %}
+        <p>The category label should start with alphabets and has a maximum of 20 characters.</p>
+        <form method="POST" action="/datatransformed">
+            <input type="hidden" name="selected-var" value={{selectedvar}}>
+            <input type="hidden" name="selected-method" value={{selectedmethod}}>
+            <table border="1" class="table-style3">
+                <thead>
+                    <tr>
+                        <th>Original</th>
+                        <th>New</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for label in labels %}
+                    <tr>
+                        <td>{{label}}</td>
+                        <td><input type="text" name={{label}} autocomplete="off" maxlength="20"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <br>
+            <input type="submit" name="rename" value="Rename">
+        </form>
+        {% else %}
+        <table border="1" class="table-style3">
+            <thead>
+                <tr>
+                    <th>Original</th>
+                    <th>New</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label in all_labels %}
+                <tr>
+                    <td>{{label[0]}}</td>
+                    <td>{{label[1]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    {% elif (selectedmethod == "Outlier-Anomaly_Treatment") %}
+    <div>
+        {% if submit == "no" %}
+        <form method="POST" action="/datatransformed">
+            <input type="hidden" name="selected-var" value={{selectedvar}}>
+            <input type="hidden" name="selected-method" value={{selectedmethod}}>
+            <label for="replace-value">Select value to be replaced as NaN:</label>
+            <input type="number" step="any" name="replace-value" id="replace-value" min={{range[0]}} max={{range[1]}}>
+            <ul class="unstyle-list">
+                <li>
+                    <input type="radio" name="replace-range" value="lower" id="lower">
+                    <label for="lower">Minimum value to specified value</label>
+                </li>
+                <li>
+                    <input type="radio" name="replace-range" value="single" id="single">
+                    <label for="single">Specified value only</label>
+                </li>
+                <li>
+                    <input type="radio" name="replace-range" value="upper" id="upper">
+                    <label for="upper">Specified value to maximum value</label>
+                </li>
+            </ul>
+            <input type="submit" name="replace" value="Replace">
+        </form>
+        {% else %}
+        {% if count_na >= 10 %}
+        <p style="color: red">Please reconsider the transformation, too many NaN values (<b>{{count_na}}</b>) generated.
+        </p>
+        {% else %}
+        <p>{{count_na}} NaN values generated after data transformation.</p>
+        {% endif %}
+        <div>
+            <p>The box plots below compare the range of values before and after {{selectedmethod}}.</p>
+            <img src='data:image/png;base64,{{plot_url}}' />
+        </div>
+        {% endif %}
+    </div>
+    {% elif (selectedmethod == "Replace_Missing_Value") %}
+    <div>
+        {% if submit == 'no' %}
+        <form method="POST" action="/datatransformed">
+            <input type="hidden" name="selected-var" value={{selectedvar}}>
+            <input type="hidden" name="selected-method" value={{selectedmethod}}>
+            <label for="replace-value">Please input the value to replace NaN:</label>
+            {% if vartype == "numeric" %}
+            <input required type="number" step="any" name="replace-value" id="replace-value">
+            {% else %}
+            <input required type="text" maxlength="20" name="replace-value" id="replace-value">
+            {% endif %}
+            <input type="submit" name="replace" value="Replace NaN">
+        </form>
+        {% else %}
+        <p>{{count_na}} NaN values have been replaced by {{replacevalue}}</p>
+        {% endif %}
+    </div>
+    {% elif (selectedmethod == "Delete_Missing_Value") %}
+    <div>
+        {% if submit == "no" %}
+        <p>There are {{count_na}} NaN values in {{selectedvar}}. Deleting any observation/row that contains missing
+            value in {{selectedvar}} will result in a smaller dataset. The new dataset will contain {{newsize}} rows.
+        </p>
+        <form method="POST" action="/datatransformed">
+            <input type="hidden" name="selected-var" value={{selectedvar}}>
+            <input type="hidden" name="selected-method" value={{selectedmethod}}>
+            <label for="delete">Are you sure you want to delete rows with missing value in {{selectedvar}}?</label>
+            <input type="submit" name="delete" id="delete" value="Yes">
+        </form>
+        {% else %}
+        <p>{{count_na}} rows have been removed from the dataset. The current dataset has {{newsize}} rows.</p>
+        {% endif %}
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

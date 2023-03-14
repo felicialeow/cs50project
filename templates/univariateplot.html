@@ -54,11 +54,11 @@
         <img src='data:image/png;base64,{{plot_url}}' />
         <!-- Message -->
         {% if varclass == "numeric" %}
-        <p style="color: red">Note: Examine the range of values in numerical data to identify anomalies. For example,
+        <p>Note: Examine the range of values in numerical data to identify anomalies. For example,
             age variable cannot
             take negative values.</p>
         {% else %}
-        <p style="color: red">Note: Consider renaming label to more meaningful and concise (less than 20 characters)
+        <p>Note: Consider renaming label to more meaningful and concise (less than 20 characters)
             category label.
             Category labels with low count can be merged into new group.</p>
         {% endif %}

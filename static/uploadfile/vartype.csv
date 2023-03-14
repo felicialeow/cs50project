@@ -14,3 +14,4 @@ capital.loss,numeric,int
 hours.per.week,numeric,int
 native.country,categorical,str
 income,categorical,str
+age_outlier,numeric,int

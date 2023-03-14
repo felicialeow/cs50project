@@ -14,3 +14,4 @@ capital.loss,False
 hours.per.week,False
 native.country,False
 income,False
+age_outlier,False

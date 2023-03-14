@@ -14,7 +14,7 @@
     font-size: 1.5rem;
 }
 
-/* floating buttons */
+/* floating menu */
 #menu {
     top: 20px;
     right: 100px;
@@ -45,6 +45,7 @@
     background-color: white;
 }
 
+/* floating reset button */
 #reset {
     top: 20px;
     right: 35px;
@@ -52,6 +53,7 @@
     position: absolute;
     z-index: 2;
 }
+
 
 /* table styling */
 .table-style {
@@ -94,8 +96,16 @@
     border: 1px solid silver;
 }
 
+.table-style3 thead th {
+    padding: 2px 10px;
+}
+
 .table-style3 tbody td {
     padding: 2px 10px;
+}
+
+#transform-table {
+    text-align: left;
 }
 
 /* inline navigation */
@@ -104,4 +114,10 @@
     text-decoration: none;
     background-color: transparent;
     padding: 1px 0px;
+}
+
+/* unstyle listing */
+.unstyle-list {
+    list-style: none;
+    padding-left: 0;
 }

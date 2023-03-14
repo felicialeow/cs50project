@@ -4,46 +4,73 @@
 <div>
     <!-- Introduction-->
     <h1 id="page-title">Data Transformation</h1>
-    <p>Data transformation is a key step in the process of EDA. It changes the raw data to achieve various goals. It can
-        involves mathematical operations that alter the scale or shape of data; handling outliers and anomalies;
-        replacing or combining values.</p>
-    {% if vars != None %}
+    <p>Data transformation is a key step in the process of EDA. It changes the raw data to achieve various goals.</p>
+    <ul>
+        <li>It can involve mathematical operations that alter the scale or shape of numerical data.</li>
+        <li>It handles outliers, anomalies and missing value in data.</li>
+        <li>It replaces or combines categorical labels.</li>
+    </ul>
+    <!-- Table of transformation method -->
     <div>
-        <form method="GET" action="/newfeature">
-            <label for="selected-var1">Select one variable:</label>
-            <select required name="selected-var1" id="selected-var1">
-                {% for col in vars %}
-                <option value={{col}}>{{col}}</option>
+        <p>The table shows a list of data transformation method available.</p>
+        <table border="1" class="dataframe table-style" id="transform-table">
+            <thead>
+                <tr>
+                    <td>Method</td>
+                    <td>Description</td>
+                    <td>Type</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for formula in allformula %}
+                <tr>
+                    <td>{{formula[0]}}</td>
+                    <td>{{formula[1]}}</td>
+                    <td>{{formula[2]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+    </div>
+    <!-- Select variable -->
+    {% if submit == "no" %}
+    <p>Select a variable for data transformation:</p>
+    <form method="POST" action="/datatransform">
+        <div>
+            <label for="selected-var">Variable:</label>
+            <select required name="selected-var" id="selected-var">
+                {% for var in variables %}
+                <option value={{var}}>{{var}}</option>
                 {% endfor %}
             </select>
-            <input type="submit" value="Submit">
-        </form>
-    </div>
-    <!-- select method -->
-    {% else %}
-    <div>
-        <p>Selected variable is {{selectedvar}}</p>
-        {% if method == None %}
-        <div>
-            <p>Here's all the formula to create a new variable based on the {{vartype}} variable.</p>
-            <form method="GET" action="/newfeature">
-                <input type="hidden" name="selected-var1" value={{selectedvar}}>
-                <label for="selected-method">Select method:</label>
-                <select required name="selected-method" id="selected-method">
-                    {% for option in options %}
-                    <option value={{option}}>{{option}}</option>
-                    {% endfor %}
-                </select>
-                <input type="submit" value="Submit">
-            </form>
         </div>
-
-        {% else %}
+        {% if formula %}
         <div>
-            <p>Selected method is {{method}}</p>
-            <p>New variable {{newcreated}} is created!</p>
+            <label for="selected-method">Method:</label>
+            <select required name="selected-method" id="selected-method">
+                {% for method in formula %}
+                <option value={{method[0]}}>{{method[0]}}</option>
+                {% endfor %}
+            </select>
         </div>
         {% endif %}
+        <input type="submit" name="submit" value="Submit">
+    </form>
+    {% else %}
+    <div>
+        <p style="margin: 0px">Selected variable for data transformation:</p>
+        <ul class="unstyle-list">
+            <li>Variable: <b>{{variables[0]}}</b></li>
+            <li>Method: <b>{{formula[0]}}</b></li>
+        </ul>
+        <form method="POST" action="/datatransformed">
+            <input type="hidden" name="selected-var" value={{variables[0]}}>
+            <input type="hidden" name="selected-type" value={{vartype}}>
+            <input type="hidden" name="selected-method" value={{formula[0]}}>
+            <input type="hidden" name="redirect" value="datatransformed">
+            <input type="submit" value="Transform">
+        </form>
     </div>
     {% endif %}
 </div>

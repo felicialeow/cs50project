@@ -12,6 +12,8 @@ import numpy
 from scipy.stats import gaussian_kde
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import seaborn as sns
+import math
+import string
 
 
 # Flask configuration
@@ -60,24 +62,39 @@ def get_color(n):
     return color_values
 
 
-# Helper function 6: generate list of formula for feature engineering
+# Helper function 6: generate list of formula for data transformation
 def generate_formula(vartype):
-    if vartype == 'numeric':
-        formula = ['Take_log',
-                   'Take_exponential',
-                   'Min-Max_Scaler',
-                   'Standardization',
-                   'Binning']
+    all_formula = [
+        ['Log-transformation', 'Taking natural logs will transform right-skewed data to make the distribution more symmetrical and closer to normal distribution', 'Numerical'],
+        ['Exponential-transformation',
+            'Taking exponential will multiple the effect of a unit change in value', 'Numerical'],
+        ['Min-Max_Scaler', 'Data normalization such that all values are in the range of 0 and 1', 'Numerical'],
+        ['Standardization', 'Rescaling the distribution of values so that the mean is 0 and standard deviation is 1', 'Numerical'],
+        ['Binning', 'Transform numerical variable into categorical variable by grouping intervals of values into categories', 'Numerical'],
+        ['Outlier-Anomaly_Treatment', 'Replacing outlier/anomaly with NaN', 'Numerical'],
+        ['Renaming_Label',
+            'Renaming categorical label (multiple labels can be replaced with the same label)', 'Categorical'],
+        ['Replace_Missing_Value', 'Replacing NaN with specific value', 'Both'],
+        ['Delete_Missing_Value', 'Remove row with missing value', 'Both']
+    ]
+    if vartype == 'both':
+        return all_formula
+    elif vartype == 'numeric':
+        return [f for f in all_formula if (f[2] == 'Numerical') or (f[2] == 'Both')]
     else:
-        formula = ['Rename_label']
-    return formula
+        return [f for f in all_formula if (f[2] == 'Categorical') or (f[2] == 'Both')]
 
 
 # Helper function 7: write files
 def write_files(df, vartype_df, excludedvar_df, new_row, newvar):
-    vartype_df = vartype_df.append(new_row, ignore_index=True)
-    excludedvar_df = excludedvar_df.append(
-        {'column': newvar, 'exclude': False}, ignore_index=True)
+    new_row = pd.DataFrame(new_row)
+    # check if row exist in variable type file
+    if len(vartype_df.loc[vartype_df.column == newvar, :]) == 0:
+        vartype_df = pd.concat([vartype_df, new_row], ignore_index=True)
+    # check if row exist in excluded variable file
+    if len(excludedvar_df.loc[excludedvar_df.column == newvar, :]) == 0:
+        excludedvar_df = pd.concat([excludedvar_df, pd.DataFrame(
+            {'column': [newvar], 'exclude': [False]})], ignore_index=True)
     df.to_csv(session.get(
         'uploaded_data_file_path'), index=False)
     vartype_df.to_csv(session.get(
@@ -435,6 +452,8 @@ def univariateplot():
                                  == selectedvar, 'type'].values[0]
         var_df = df[[selectedvar]].copy()
         var_df[selectedvar] = var_df[selectedvar].astype(vartype)
+        # remove missing value
+        var_df = var_df.dropna(how='any')
 
         # buffer to store image file
         buf = BytesIO()
@@ -500,78 +519,283 @@ def univariateplot():
 # Data Transformation
 @app.route('/datatransform', methods=['GET', 'POST'])
 def datatransform():
-    # read all files
-    df = pd.read_csv(session.get('uploaded_data_file_path'))
-    vartype_df = pd.read_csv(session.get('vartype_filepath'))
-    excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
-
-    includedvar = excludedvar_df.loc[~excludedvar_df.exclude, 'column'].tolist(
-    )
-
-    if request.method == 'GET':
-        if request.args.get('selected-var1'):
-            selectedvar = request.args.get('selected-var1')
+    # current session
+    if request.method == 'POST':
+        # read all files
+        df = pd.read_csv(session.get('uploaded_data_file_path'))
+        vartype_df = pd.read_csv(session.get('vartype_filepath'))
+        excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
+        includedvar = excludedvar_df.loc[~excludedvar_df.exclude, 'column'].tolist(
+        )
+        # user redirected to datatransform.html
+        if request.form.get('redirect') == 'datatransform':
+            return render_template('datatransform.html', allformula=generate_formula('both'), variables=includedvar, submit='no')
+        # user submitted form to select variable
+        elif request.form.get('submit') == 'Submit':
+            selectedvar = request.form.get('selected-var')
             vartype = vartype_df.loc[vartype_df['column']
                                      == selectedvar, 'class'].values[0]
-            if request.args.get('selected-method'):
-                selectedmethod = request.args.get('selected-method')
+            # user hasnt select method
+            if not request.form.get('selected-method'):
+                return render_template('datatransform.html', allformula=generate_formula('both'), variables=[selectedvar],
+                                       vartype=vartype,
+                                       formula=generate_formula(vartype),
+                                       submit='no')
+            else:
+                selectedmethod = request.form.get('selected-method')
+                return render_template('datatransform.html', allformula=generate_formula('both'), variables=[selectedvar], vartype=vartype,
+                                       formula=[selectedmethod],
+                                       submit='yes')
+    # restart session
+    else:
+        return redirect('/')
 
-                if selectedmethod == "Take_log":
+
+# Transformed Data
+@app.route('/datatransformed', methods=['GET', 'POST'])
+def datatransformed():
+    # current session
+    if request.method == 'POST':
+        # read all files
+        df = pd.read_csv(session.get('uploaded_data_file_path'))
+        vartype_df = pd.read_csv(session.get('vartype_filepath'))
+        excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
+        # get form parameters
+        selectedvar = request.form.get('selected-var')
+        selectedmethod = request.form.get('selected-method')
+        # transform variable
+        if (selectedmethod == 'Log-transformation') or (selectedmethod == 'Exponential-transformation') or (selectedmethod == 'Standardization'):
+            if selectedmethod == 'Log-transformation':
+                # check if data is positive
+                if df[selectedvar].min() <= 0:
+                    return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod,
+                                           message="Note: Log-transformation is only allowed for positive numerical data.")
+                else:
                     newvar = selectedvar + '_log'
                     df[newvar] = numpy.log(df[selectedvar])
-                    new_row = {'column': newvar,
-                               'class': 'numeric', 'type': 'float'}
-                    write_files(df, vartype_df, excludedvar_df,
-                                new_row, newvar)
-
-                if selectedmethod == "Take_exponential":
-                    newvar = selectedvar + '_exp'
-                    df[newvar] = numpy.exp(df[selectedvar])
-                    new_row = {'column': newvar,
-                               'class': 'numeric', 'type': 'float'}
-                    write_files(df, vartype_df, excludedvar_df,
-                                new_row, newvar)
-
-                if selectedmethod == "Min-Max_Scaler":
-                    scaler = MinMaxScaler()
-                    newvar = selectedvar + '_minmaxscaler'
-                    df[newvar] = scaler.fit_transform(
-                        df[selectedvar].values.reshape(-1, 1))
-                    new_row = {'column': newvar,
-                               'class': 'numeric', 'type': 'float'}
-                    write_files(df, vartype_df, excludedvar_df,
-                                new_row, newvar)
-
-                if selectedmethod == "Standardization":
-                    scaler = StandardScaler()
-                    newvar = selectedvar + '_stdscaler'
-                    df[newvar] = scaler.fit_transform(
-                        df[selectedvar].values.reshape(-1, 1))
-                    new_row = {'column': newvar,
-                               'class': 'numeric', 'type': 'float'}
-
-                    write_files(df, vartype_df, excludedvar_df,
-                                new_row, newvar)
-
-                if selectedmethod == "Binning":
-                    session['method'] = selectedmethod
-                    session['variable'] = selectedvar
-                    return render_template("binning.html", method=selectedmethod, selectedvar=selectedvar, done='No')
-
-                if selectedmethod == "Rename_label":
-                    session['method'] = selectedmethod
-                    session['variable'] = selectedvar
-                    labels = df[selectedvar].unique()
-                    return render_template("rename_label.html", method=selectedmethod, selectedvar=selectedvar, done='No', labels=labels)
-
-                return render_template('newfeature.html', vars=None, method=selectedmethod, selectedvar=selectedvar, newcreated=newvar)
+            elif selectedmethod == 'Exponential-transformation':
+                # check if data is suitable for exp
+                if numpy.exp(df[selectedvar]).mean() == math.inf:
+                    return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod,
+                                           message="Note: Exponential-transformation is not suitable for numerical data with large values.")
+                newvar = selectedvar + '_exp'
+                df[newvar] = numpy.exp(df[selectedvar])
             else:
-                return render_template('newfeature.html', vars=None, method=None, selectedvar=selectedvar, vartype=vartype, options=generate_formula(vartype))
-        else:
-            return render_template('newfeature.html', vars=includedvar)
+                scaler = StandardScaler()
+                newvar = selectedvar + '_stdscaler'
+                df[newvar] = scaler.fit_transform(df[[selectedvar]].values)
+            new_row = {'column': [newvar], 'class': [
+                'numeric'], 'type': ['float']}
+            write_files(df, vartype_df, excludedvar_df, new_row, newvar)
+            # filter missing value
+            filtered_df = df[[selectedvar, newvar]].copy()
+            filtered_df = filtered_df.dropna(how='any')
+            # create density plot
+            buf = BytesIO()
+            [[ax, bx]] = filtered_df.plot.kde(y=[selectedvar, newvar],
+                                              zorder=2, color=['#5c729f', '#9f5c72'],
+                                              subplots=True, layout=(1, 2), sharex=False, legend=False, figsize=(6, 4))
+            ax.hist(filtered_df[[selectedvar]], 100, density=True,
+                    histtype='stepfilled', facecolor='#5c729f', alpha=0.75)
+            ax.set_xlim(filtered_df[selectedvar].min(),
+                        filtered_df[selectedvar].max())
+            ax.set_xlabel(selectedvar)
+            bx.hist(filtered_df[[newvar]], 100, density=True,
+                    histtype='stepfilled', facecolor='#9f5c72', alpha=0.75)
+            bx.set_xlim(filtered_df[newvar].min(), filtered_df[newvar].max())
+            bx.set_xlabel(newvar)
+            plt.tight_layout()
+            plt.savefig(buf, format='png')
+            plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
+            return render_template('datatransformed.html', selectedvar=selectedvar, newvar=newvar, selectedmethod=selectedmethod, plot_url=plot_url)
+        elif (selectedmethod == 'Min-Max_Scaler'):
+            scaler = MinMaxScaler()
+            newvar = selectedvar + '_minmaxscaler'
+            df[newvar] = scaler.fit_transform(df[[selectedvar]].values)
+            new_row = {'column': [newvar], 'class': [
+                'numeric'], 'type': ['float']}
+            write_files(df, vartype_df, excludedvar_df, new_row, newvar)
+            # filter missing value
+            filtered_df = df[[selectedvar, newvar]].copy()
+            filtered_df = filtered_df.dropna(how='any')
+            # create boxplot
+            buf = BytesIO()
+            fig, ax = plt.subplots(nrows=1, ncols=2)
+            bp1 = ax[0].boxplot(filtered_df[[selectedvar]],
+                                vert=False, patch_artist=True)
+            bp1['boxes'][0].set_facecolor('#5c729f')
+            bp1['medians'][0].set(color='black')
+            ax[0].set_yticklabels([''])
+            ax[0].set_xlabel(selectedvar)
+            bp2 = ax[1].boxplot(
+                filtered_df[[newvar]], vert=False, patch_artist=True)
+            bp2['boxes'][0].set_facecolor('#9f5c72')
+            bp2['medians'][0].set(color='black')
+            ax[1].set_yticklabels([''])
+            ax[1].set_xlabel(newvar)
+            plt.tight_layout()
+            plt.savefig(buf, format='png')
+            plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
+            return render_template('datatransformed.html', selectedvar=selectedvar, newvar=newvar, selectedmethod=selectedmethod, plot_url=plot_url)
+        elif selectedmethod == 'Binning':
+            min_val = df[selectedvar].min()
+            max_val = df[selectedvar].max()
+            mid_val = (max_val - min_val)/2
+            range_values = (min_val, mid_val, max_val)
+            # user hasnt submit the cut points
+            if not request.form.get('cut'):
+                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, range=range_values, submit='no')
+            else:
+                # check the cut points
+                cut = request.form.get('cut')
+                bins = cut.split(',')
+                bins = list(map(int, bins))
+                # all values fall within the range
+                criteria1 = all([True if (bin >= min_val) and (
+                    bin <= max_val) else False for bin in bins])
+                # cut points are sorted in ascending order
+                criteria2 = sorted(bins) == bins
+                if criteria1 and criteria2:
+                    # make sure bins cover min and max value
+                    if bins[0] > min_val:
+                        bins.insert(0, min_val-1)
+                    if bins[-1] < max_val:
+                        bins.append(max_val)
+                    # create new categorical variable
+                    newvar = selectedvar + '_bin'
+                    df[newvar] = pd.cut(df[selectedvar], bins)
+                    new_row = {'column': [newvar], 'class': [
+                        'categorical'], 'type': ['str']}
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+                    # label and count of each category
+                    labels = list(df[newvar].unique())
+                    counts = list(df[newvar].value_counts())
+                    label_count = sorted(
+                        list(zip(labels, counts)), key=lambda pair: pair[0])
+                    return render_template('datatransformed.html', selectedvar=selectedvar, newvar=newvar, selectedmethod=selectedmethod, labels=label_count, submit='yes')
+                else:
+                    message = []
+                    if not criteria1:
+                        message.append(
+                            'All cut points should fall within the range.')
+                    if not criteria2:
+                        message.append(
+                            'All cut points have to be listed in ascending order.')
+                    return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, range=range_values, message=message, submit='no')
+        elif selectedmethod == 'Renaming_Label':
+            original_labels = list(df[selectedvar].unique())
+            cleaned_labels = [label.replace(' ', '')
+                              for label in original_labels]
+            # user hasnt rename labels
+            if not request.form.get('rename'):
+                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, labels=cleaned_labels, submit='no')
+            else:
+                if selectedvar[len(selectedvar)-4:len(selectedvar)] == '_bin':
+                    newvar = selectedvar
+                else:
+                    newvar = selectedvar + '_renamed'
+                df[newvar] = df[selectedvar]
+                new_labels = []
+                # replace label
+                for i in range(len(original_labels)):
+                    new_label = request.form.get(cleaned_labels[i])
+                    # no new label given
+                    if new_label == '':
+                        new_label = cleaned_labels[i]
+                    new_labels.append(new_label.replace(' ', ''))
+                    df[newvar] = df[newvar].replace(
+                        original_labels[i], new_label)
+                all_labels = list(zip(cleaned_labels, new_labels))
+                # update data file
+                new_row = {'column': [newvar], 'class': [
+                    'categorical'], 'type': ['str']}
+                write_files(df, vartype_df, excludedvar_df, new_row, newvar)
+                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod,
+                                       all_labels=all_labels, submit='yes')
+        elif selectedmethod == 'Outlier-Anomaly_Treatment':
+            min_val = df[selectedvar].min()
+            max_val = df[selectedvar].max()
+            # user hasnt submit replace values
+            if not request.form.get('replace'):
+                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, range=(min_val, max_val), submit='no')
+            else:
+                selectedvalue = float(request.form.get('replace-value'))
+                selectedrange = request.form.get('replace-range')
+                newvar = selectedvar + '_outlier'
+                df[newvar] = df[selectedvar]
+                if selectedrange == 'lower':
+                    cond = df[newvar] <= selectedvalue
+                elif selectedrange == 'upper':
+                    cond = df[newvar] >= selectedvalue
+                else:
+                    cond = df[newvar] == selectedvalue
+                # replace value with NaN
+                df.loc[cond, newvar] = math.nan
+                new_row = {'column': [newvar], 'class': ['numeric'], 'type': [
+                    vartype_df.loc[vartype_df['column'] == selectedvar, 'type'].values[0]]}
+                write_files(df, vartype_df, excludedvar_df, new_row, newvar)
+                # count NaN
+                count_na = df[newvar].isnull().sum()
+                # create boxplot
+                buf = BytesIO()
+                fig, ax = plt.subplots(nrows=1, ncols=2)
+                bp1 = ax[0].boxplot(df[[selectedvar]].dropna(how='any'),
+                                    vert=False, patch_artist=True)
+                bp1['boxes'][0].set_facecolor('#5c729f')
+                bp1['medians'][0].set(color='black')
+                ax[0].set_yticklabels([''])
+                ax[0].set_xlabel(selectedvar)
+                bp2 = ax[1].boxplot(
+                    df[[newvar]].dropna(how='any'), vert=False, patch_artist=True)
+                bp2['boxes'][0].set_facecolor('#9f5c72')
+                bp2['medians'][0].set(color='black')
+                ax[1].set_yticklabels([''])
+                ax[1].set_xlabel(newvar)
+                plt.tight_layout()
+                plt.savefig(buf, format='png')
+                plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
+                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, count_na=count_na, plot_url=plot_url, submit='yes')
+        elif selectedmethod == 'Replace_Missing_Value':
+            vartype = vartype_df.loc[vartype_df['column']
+                                     == selectedvar, 'class'].values[0]
+            # user hasnt submit replace value
+            if not request.form.get('replace'):
+                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, vartype=vartype, submit='no')
+            else:
+                # convert replace value to correct data type
+                replacevalue = request.form.get('replace-value')
+                if vartype == 'numeric':
+                    replacevalue = float(replacevalue)
+                else:
+                    replacevalue = replacevalue.replace(' ', '')
+                # count NaN
+                count_na = df[selectedvar].isnull().sum()
+                # replace NaN
+                newvar = selectedvar + '_nan'
+                df[newvar] = df[selectedvar]
+                df.loc[df[newvar].isna(), newvar] = replacevalue
+                new_row = {'column': [newvar], 'class': [vartype], 'type': [
+                    vartype_df.loc[vartype_df['column'] == selectedvar, 'type'].values[0]]}
+                write_files(df, vartype_df, excludedvar_df, new_row, newvar)
+                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, count_na=count_na, replacevalue=replacevalue, submit='yes')
+        elif selectedmethod == 'Delete_Missing_Value':
+            # count NaN
+            count_na = df[selectedvar].isnull().sum()
+            newsize = df.shape[0] - count_na
+            # user hasnt submit form to delete NaN
+            if not request.form.get('delete'):
+                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, count_na=count_na, newsize=newsize, submit='no')
+            else:
+                # drop row with NaN in selected variable
+                df = df.dropna(axis=0, how='all', subset=[selectedvar])
+                df.to_csv(session.get('uploaded_data_file_path'), index=False)
+                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, count_na=count_na, newsize=df.shape[0], submit='yes')
+    # restart session
+    else:
+        return redirect('/')
 
 
-# Select multivariable
 @app.route('/selectmultivar', methods=['GET', 'POST'])
 def selectmultivar():
 
@@ -670,55 +894,3 @@ def multivariateplot():
     plt.savefig(buf, format='png')
     plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
     return render_template('multivariateplot.html', plot_url=plot_url)
-
-
-@app.route('/binning', methods=['GET', 'POST'])
-def bin():
-    # read all files
-    df = pd.read_csv(session.get('uploaded_data_file_path'))
-    vartype_df = pd.read_csv(session.get('vartype_filepath'))
-    excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
-
-    selectedmethod = session.get('method')
-    selectedvar = session.get('variable')
-    cut = request.form.get("cut")
-
-    bins = cut.split(',')
-    bins = list(map(int, bins))
-
-    # make sure bins cover min and max value
-    if bins[0] > df[selectedvar].min():
-        bins.insert(0, int(df[selectedvar].min())-1)
-    if bins[-1] < df[selectedvar].max():
-        bins.append(int(df[selectedvar].max()))
-
-    newvar = session.get('variable') + '_bin'
-    df[newvar] = pd.cut(df[selectedvar], bins)
-    new_row = {'column': newvar,
-               'class': 'categorical', 'type': 'str'}
-    write_files(df, vartype_df, excludedvar_df,
-                new_row, newvar)
-    return render_template('binning.html', method=selectedmethod, selectedvar=selectedvar, done='Yes', newvar=newvar)
-
-
-@app.route('/rename_label', methods=['GET', 'POST'])
-def relabel():
-    # read all files
-    # changed_labellist = session.get('temp_list')
-
-    df = pd.read_csv(session.get('uploaded_data_file_path'))
-
-    selectedmethod = session.get('method')
-    selectedvar = session.get('variable')
-
-    newlabel = request.form.getlist("newlabel")
-    orilabel = request.form.getlist("orilabel")
-    # print(newlabel)
-    for i, j in zip(newlabel, orilabel):
-        if i != '':
-            df[selectedvar] = df[selectedvar].replace(j, i)
-
-    df.to_csv(session.get(
-        'uploaded_data_file_path'), index=False)
-
-    return render_template('rename_label.html', method=selectedmethod, selectedvar=selectedvar, done='Yes')
