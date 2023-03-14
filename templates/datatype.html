@@ -45,6 +45,8 @@
                                 {% if col[1] == "numeric" %}
                                 <option value="numeric">Numerical</option>
                                 <option value="categorical">Categorical</option>
+                                {% elif (col[1] == "categorical") and (col[2]) %}
+                                <option value="categorical">Categorical</option>
                                 {% else %}
                                 <option value="categorical">Categorical</option>
                                 <option value="numeric">Numerical</option>

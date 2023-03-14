@@ -29,7 +29,8 @@
         <!-- Reset Button -->
         <div id="reset">
             <form method="GET" action="/">
-                <input type="submit" value="Reset" class="btn btn-danger btn-sm">
+                <input type="submit" value="Reset" class="btn btn-danger btn-sm" data-toggle="tooltip"
+                    data-placement="bottom" title="All changes will disappear. Data file has to be uploaded again.">
             </form>
         </div>
         <!-- Navigation Menu -->
@@ -62,6 +63,12 @@
                     <form method="POST" action="/datatransform">
                         <input type="hidden" name="redirect" value="datatransform">
                         <input type="submit" value="Data Transformation">
+                    </form>
+                </li>
+                <li>
+                    <form method="POST" action="/selectmultivar">
+                        <input type="hidden" name="redirect" value="selectmultivar">
+                        <input type="submit" value="Multivariate Visualization">
                     </form>
                 </li>
             </ul>

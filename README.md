@@ -48,7 +48,7 @@ this is split into numeric variables and categorical variables
 
 5. feature engineering 
 
-
+# https://www.kaggle.com/code/alokevil/simple-eda-for-beginners
 chart builder page 
 - show data structure
 - select x variable 

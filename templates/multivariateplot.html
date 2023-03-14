@@ -1,50 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "BASE.html" %}
 
-<head>
-    <title>CS50 Project</title>
-    <link rel="stylesheet" href="/static/style.css" />
-</head>
-
-<body>
-    <!-- Page content -->
+{% block content %}
+<div>
+    <!-- Introduction -->
+    <h1 id="page-title">Multivariate Visualization</h1>
+    <p>The {{plot}} is used to study the relationship between {{variables}}.</p>
+    <!-- Control plot size -->
+    <form method="POST" action="multivariateplot">
+        <input type="hidden" name="xvar" value={{xvar}}>
+        <input type="hidden" name="yvar" value={{yvar}}>
+        <input type="hidden" name="zvar" value={{zvar}}>
+        <input type="hidden" name="plot" value={{plot}}>
+        <span>
+            <input type="submit" name="changex" value="Expand X axis">
+            <input type="submit" name="changex" value="Contract X axis">
+        </span>
+    </form>
+    <!-- Plot area -->
     <div>
-        <h1>Multivariate Visualisation</h1>
-
-        <div>
-            <img src='data:image/png;base64,{{plot_url}}' />
-        </div>
-        <br>
-        <form method='POST' action="/multivariateplot">
-            <input type="submit" name="expandx" value="expand x axis">
-
-        </form>
-
-        <div>
-            <!-- back to multivariate plot -->
-            <br>
-            <form method="GET" action="/selectmultivar">
-                <input type="submit" value="Back to Multivariate Plot">
-            </form>
-
-            <!-- go to feature engineering -->
-            <br>
-            <form method="GET" action="/newfeature">
-                <input type="submit" value="Go to Feature Engineering">
-            </form>
-            <!-- back to summary statistics -->
-            <br>
-            <form method="GET" action="/numeric">
-                <input type="submit" value="Back to Summary Statistics">
-            </form>
-            <!-- reset button -->
-            <br>
-            <form method="GET" action="/">
-                <input type="submit" value="Reset">
-            </form>
-        </div>
-
+        <img src='data:image/png;base64,{{plot_url}}' />
     </div>
-</body>
-
-</html>
+</div>
+{% endblock %}

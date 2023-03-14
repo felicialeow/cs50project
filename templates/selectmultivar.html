@@ -1,73 +1,127 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "BASE.html" %}
 
-<head>
-    <title>CS50 Project</title>
-    <link rel="stylesheet" href="/static/style.css" />
-</head>
-
-<body>
-    <!-- Page content -->
+{% block content %}
+<div>
+    <!-- Introduction -->
+    <h1 id="page-title">Multivariate Visualization</h1>
+    <p>The multivariate visualization explores the relationship between two or more variables.</p>
+    <!-- Plot type -->
+    {% if submit == "no" %}
     <div>
-        <h1>Multivariate Visualisation</h1>
-
-        <form method="POST" action="/multivariateplot">
-            <p>Select x axis</p>
-            <div>
-                <select required name="selected_x" id="selected_x">
-                    <!-- <option value="none" selected disabled hidden>Select</option> -->
-                    {% for var in xs %}
-                    <option value={{var}}>{{var}}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <p>Select y axis</p>
-            <div>
-                <select name="selected_y" id="selected_y">
-                    <!-- <option value="none" selected>Select</option> -->
-                    <option value="_count_">count</option>
-                    {% for var in ys %}
-                    <option value={{var}}>{{var}}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <p>Select Group</p>
-            <div>
-                <select name="selected_group" id="selected_group">
-                    <option value="none" selected>none</option>
-                    {% for var in groups %}
-                    <option value={{var}}>{{var}}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <br>
-            <input type="submit" value="Submit">
-        </form>
-
-
-
-
-        <div>
-            <!-- go to feature engineering -->
-            <br>
-            <form method="GET" action="/newfeature">
-                <input type="submit" value="Go to Feature Engineering">
-            </form>
-            <!-- back to summary statistics -->
-            <br>
-            <form method="GET" action="/numeric">
-                <input type="submit" value="Back to Summary Statistics">
-            </form>
-            <!-- reset button -->
-            <br>
-            <form method="GET" action="/">
-                <input type="submit" value="Reset">
-            </form>
-        </div>
+        <p>The table summarizes different type of visualization and which variable types are suitable to build the
+            graphic.</p>
+        <table border="1" class="dataframe table-style3">
+            <thead>
+                <tr>
+                    <th>Visualization Type</th>
+                    <th>X-variable</th>
+                    <th>Y-variable</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plot in allplots %}
+                <tr>
+                    <td>{{plot[0]}}</td>
+                    <td>{{plot[1].split('-')[0]}}</td>
+                    <td>{{plot[1].split('-')[1]}}</td>
+                    <td>{{plot[2]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
     </div>
-
-</body>
-
-</html>
+    <!-- Select variables for plotting -->
+    <div>
+        <p>Select the x-variable and y-variable use to build graphic:</p>
+        <form method="POST" action="/selectmultivar">
+            {% if xvar %}
+            <div>
+                <label for="xvar">X variable:</label>
+                <select required name="xvar" id="xvar">
+                    {% for var in xvar %}
+                    <option value={{var}}>{{var}}</option>
+                    {% endfor %}
+                </select>
+                <input type="hidden" name="selectedx" value="yes">
+            </div>
+            {% endif %}
+            {% if yvar %}
+            <div>
+                <label for="yvar">Y variable:</label>
+                <select required name="yvar" id="yvar">
+                    {% for var in yvar %}
+                    <option value={{var}}>{{var}}</option>
+                    {% endfor %}
+                </select>
+                <input type="hidden" name="selectedy" value="yes">
+            </div>
+            {% endif %}
+            {% if zvar %}
+            <div>
+                {% if zvar[0] != "noz" %}
+                <label for="zvar">Grouping variable:</label>
+                <select required name="zvar" id="zvar">
+                    {% for var in zvar %}
+                    <option value={{var}}>{{var}}</option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <label for="zvar">Grouping variable:</label>
+                <select required name="zvar" id="zvar">
+                    <option selected value="noz">Not available</option>
+                </select>
+                {% endif %}
+                <input type="hidden" name="selectedz" value="yes">
+            </div>
+            {% endif %}
+            {% if plots %}
+            <div>
+                {% if plots[0] != "No-plot" %}
+                <label for="plot">Visualization Type:</label>
+                <select required name="plot" id="plot">
+                    {% for plot in plots %}
+                    <option value={{plot}}>{{plot}}</option>
+                    {% endfor %}
+                </select>
+                <input type="hidden" name="selectedplot" value="yes">
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if plots %}
+            {% if plots[0] == "No-plot" %}
+            <p style="color: red">No visualization type suitable for selected variables. Please choose other variables.
+            </p>
+            {% else %}
+            <input type="submit" value="Submit">
+            {% endif %}
+            {% else %}
+            <input type="submit" value="Submit">
+            {% endif %}
+        </form>
+    </div>
+    {% else %}
+    <!-- Selected variables and plot type -->
+    <div>
+        <p style="margin: 0px">Selected variables and visualization type:</p>
+        <ul class="unstyle-list">
+            <li>X variable: <b>{{xvar}}</b></li>
+            <li>Y variable: <b>{{yvar}}</b></li>
+            {% if (zvar == 'noz') or (zvar == 'No-grouping') %}
+            {% else %}
+            <li>Grouping variable: <b>{{zvar}}</b></li>
+            {% endif %}
+            <li>Visualization: <b>{{plot}}</b></li>
+        </ul>
+        <form method="POST" action="/multivariateplot">
+            <input type="hidden" name="xvar" value={{xvar}}>
+            <input type="hidden" name="yvar" value={{yvar}}>
+            <input type="hidden" name="zvar" value={{zvar}}>
+            <input type="hidden" name="plot" value={{plot}}>
+            <input type="submit" name="multivariateplot" value="Plot">
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

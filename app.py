@@ -37,10 +37,12 @@ def start_session():
                     'vartype_filepath',
                     'vartype_FIXED_filepath',
                     'excludedvar_filepath',
-                    'method',
-                    'variable']
+                    'fig_sizex',
+                    'fig_sizey']
     for info in list_of_info:
         session[info] = ""
+    session['fig_sizex'] = 7
+    session['fig_sizey'] = 4
 
 
 # Helper function 3: clear session information
@@ -122,6 +124,50 @@ def set_figure_params():
 
 
 set_figure_params
+
+
+# Helper function 9: check if categorical variable can be converted to numeric
+def testnumeric(var, df):
+    def numericval(value):
+        try:
+            float(value)
+            f = True
+        except:
+            f = False
+
+        try:
+            int(value)
+            i = True
+        except:
+            i = False
+        return f or i
+
+    var_df = df[var]
+    return all([numericval(value) for value in var_df])
+
+
+# Helper function 10: generate list of plot
+def generate_plottype(combi):
+    allplots = [['scatter-plot', 'numeric-numeric', 'Shows the correlation between x-variable and y-variable. It describes how x-variable changes with y-variable.'],
+                ['line-plot', 'numeric-numeric',
+                 'Shows the linear correlation between x-variable and y-variable.'],
+                ['box-plot', 'numeric-categorical',
+                 'Compare the range and spread of x-variable across categories of y-variable.'],
+                ['bar-plot_sum', 'numeric-categorical',
+                 'Sum of x-variable for each group of y-variable'],
+                ['bar-plot_average', 'numeric-categorical',
+                 'Average of x-variable for each group of y-variable'],
+                ['count-plot', 'categorical-categorical',
+                 'Count of x-variable across each group of y-variable. NOTE: Limit to two groups of y-variable'],
+                ['density-plot', 'numeric-categorical',
+                 'Compare the distribution of x-variable for each group of y-variable']
+                ]
+    if combi == 'all':
+        return allplots
+    elif (combi == 'numeric-categorical') or (combi == 'categorical-numeric'):
+        return [plot for plot in allplots if ('numeric-categorical' == plot[1]) or ('categorical-numeric' == plot[1])]
+    else:
+        return [plot for plot in allplots if combi in plot[1]]
 
 
 # Upload file
@@ -234,7 +280,16 @@ def datatype():
             vartype = pd.read_csv(session.get('vartype_FIXED_filepath'))
         else:
             vartype = pd.read_csv(session.get('vartype_filepath'))
+        # check if categorical variable can be converted into numerical variable
         vartype_list = list(zip(vartype['column'], vartype['class']))
+        var_fixed = []
+        for var in vartype_list:
+            if var[1] == 'numeric':
+                var_fixed.append(True)
+            else:
+                var_fixed.append(not (testnumeric(var[0], df)))
+        vartype_list = list(
+            zip(vartype['column'], vartype['class'], var_fixed))
 
         # user redirected to datatype.html
         if request.form.get('redirect') == 'datatype':
@@ -796,101 +851,169 @@ def datatransformed():
         return redirect('/')
 
 
+# Select variables for multivariate plot
 @app.route('/selectmultivar', methods=['GET', 'POST'])
 def selectmultivar():
-
-    # read files
-    vartype_df = pd.read_csv(session.get('vartype_filepath'))
-    excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
-    includedvar = excludedvar_df.loc[~excludedvar_df['exclude'], 'column'].tolist(
-    )
-    # categorical variables for x and group
-    categoricalvar = [
-        col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'categorical', 'column'].values]
-    # numeric variables for y
-    numericvar = [
-        col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'numeric', 'column'].values]
-
-    return render_template('selectmultivar.html', xs=includedvar, ys=numericvar, groups=categoricalvar)
+    # current session
+    if request.method == 'POST':
+        # read files
+        df = pd.read_csv(session.get('uploaded_data_file_path'))
+        vartype_df = pd.read_csv(session.get('vartype_filepath'))
+        excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
+        includedvar = excludedvar_df.loc[~excludedvar_df['exclude'], 'column'].tolist(
+        )
+        # xvar not chosen
+        if not request.form.get('selectedx'):
+            return render_template('selectmultivar.html', allplots=generate_plottype('all'), xvar=includedvar, submit='no')
+        # xvar chosen
+        else:
+            xvar = request.form.get('xvar')
+            includedvar = [var for var in includedvar if var != xvar]
+            # yvar not chosen
+            if not request.form.get('selectedy'):
+                return render_template('selectmultivar.html', allplots=generate_plottype('all'), xvar=[xvar], yvar=includedvar, submit='no')
+            # xvar and yvar chosen
+            else:
+                yvar = request.form.get('yvar')
+                xtype = vartype_df.loc[vartype_df['column']
+                                       == xvar, 'class'].values[0]
+                ytype = vartype_df.loc[vartype_df['column']
+                                       == yvar, 'class'].values[0]
+                # zvar not chosen
+                if not request.form.get('selectedz'):
+                    if (xtype == 'numeric') and (ytype == 'numeric'):
+                        includedvar = [
+                            var for var in includedvar if var != yvar]
+                        includedvar = [
+                            var for var in includedvar if var in vartype_df.loc[vartype_df['class'] == 'categorical', 'column'].to_list()]
+                        includedvar.append('No-grouping')
+                    else:
+                        includedvar = ['noz']
+                    return render_template('selectmultivar.html', allplots=generate_plottype('all'), xvar=[xvar], yvar=[yvar], zvar=includedvar, submit='no')
+                # xvar, yvar and zvar chosen
+                else:
+                    zvar = request.form.get('zvar')
+                    # plot not chosen
+                    if not request.form.get('selectedplot'):
+                        plots = generate_plottype(xtype+'-'+ytype)
+                        plots = [plot[0] for plot in plots]
+                        # exclude count-plot if yvar has more than 2 levels
+                        if (xtype == 'categorical') and (ytype == 'categorical'):
+                            if (df[yvar].nunique() > 2) and (df[xvar].nunique() > 2):
+                                plots.remove('count-plot')
+                        # no available plot
+                        if len(plots) == 0:
+                            plots = ['No-plot']
+                        return render_template('selectmultivar.html', allplots=generate_plottype('all'), xvar=[xvar], yvar=[yvar], zvar=[zvar], plots=plots, submit='no')
+                    # all variables and plot chosen
+                    else:
+                        plot = request.form.get('plot')
+                        return render_template('selectmultivar.html', xvar=xvar, yvar=yvar, zvar=zvar, plot=plot, submit='yes')
+    # restart session
+    else:
+        return redirect('/')
 
 
 # Multivariate plot
-# https://www.kaggle.com/code/alokevil/simple-eda-for-beginners
-
-
 @app.route('/multivariateplot', methods=['GET', 'POST'])
 def multivariateplot():
-    x = request.form.get('selected_x')
-    y = request.form.get('selected_y')
-    z = request.form.get('selected_group')
+    # current session
+    if request.method == 'POST':
+        # read all files
+        df = pd.read_csv(session.get('uploaded_data_file_path'))
+        vartype_df = pd.read_csv(session.get('vartype_filepath'))
 
-    if x is not None:
-        session['x'] = x
-    else:
-        x = session.get('x')
+        # get form parameters
+        xvar = request.form.get('xvar')
+        xtype = vartype_df.loc[vartype_df['column'] == xvar, 'class'].values[0]
+        yvar = request.form.get('yvar')
+        ytype = vartype_df.loc[vartype_df['column'] == yvar, 'class'].values[0]
+        zvar = request.form.get('zvar')
+        plot = request.form.get('plot')
 
-    if y is not None:
-        session['y'] = y
-    else:
-        y = session.get('y')
-
-    if z is not None:
-        session['z'] = z
-    else:
-        z = session.get('z')
-
-    # read files
-    vartype_df = pd.read_csv(session.get('vartype_filepath'))
-    excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
-    includedvar = excludedvar_df.loc[~excludedvar_df['exclude'], 'column'].tolist(
-    )
-    categoricalvar = [
-        col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'categorical', 'column'].values]
-
-    numericvar = [
-        col for col in includedvar if col in vartype_df.loc[vartype_df['class'] == 'numeric', 'column'].values]
-
-    # some inputs are same
-    if x == y or x == z:
-        return render_template('error.html', msg="Error:Please make sure inputs are different")
-    if x in numericvar and y == "_count_":
-        return render_template('error.html', msg="Error:Cannot plot count when x is numeric")
-
-    # if z == "none" and y == "_count_":
-    #     return render_template('error.html', msg="Error:Cannot plot count when group is none or x and group are both categorical")
-
-    file_path = session.get('uploaded_data_file_path')
-    # read all files
-    df = pd.read_csv(file_path)
-
-    # buffer to store image file
-    buf = BytesIO()
-    # # empty canvas for plotting
-    if request.form.get('expandx'):
-        xaxis = session.get('xaxis')
-        xaxis = xaxis + 1
-        session['xaxis'] = xaxis
-    else:
-        session['xaxis'] = 8
-        xaxis = session.get('xaxis')
-    fig = plt.figure(figsize=(xaxis, 6))
-
-    # ax = fig.add_subplot()
-    if y == '_count_' and z != 'none':
-        sns.countplot(x=x, hue=z, data=df, order=df[x].value_counts().index)
-
-    elif z == 'none':
-        if y == '_count_':
-            sns.countplot(x=x, data=df, order=df[x].value_counts().index)
-        elif x in numericvar and y in numericvar:
-            sns.relplot(x=x, y=y, data=df)
+        # subset data set
+        if (zvar != 'noz') and (zvar != 'No-grouping'):
+            df = df[[xvar, yvar, zvar]].copy()
         else:
-            sns.boxplot(x=x, y=y, data=df)
+            df = df[[xvar, yvar]]
+        # convert variable type
+        for col in df.columns.tolist():
+            vartype = vartype_df.loc[vartype_df['column']
+                                     == col, 'type'].values[0]
+            df[col] = df[col].astype(vartype)
 
+        # buffer to store image file
+        buf = BytesIO()
+
+        # adjust figure size in x dimension
+        if request.form.get('changex'):
+            sizex = session.get('fig_sizex')
+            if request.form.get('changex') == "Expand X axis":
+                session['fig_sizex'] = sizex + 1
+            else:
+                session['fig_sizex'] = sizex - 1
+
+        # empty canvas for plotting
+        fig = plt.figure(figsize=(session['fig_sizex'], session['fig_sizey']))
+        ax = fig.add_subplot()
+
+        # plot
+        if plot == 'box-plot':
+            if xtype == 'numeric':
+                sns.boxplot(data=df, x=xvar, y=yvar,
+                            orient='h', palette='rainbow')
+            else:
+                sns.boxplot(data=df, x=yvar, y=xvar,
+                            orient='h', palette='rainbow')
+        elif plot == 'bar-plot_sum':
+            if xtype == 'numeric':
+                aggregated = df.groupby(yvar)[xvar].sum().reset_index()
+                sns.barplot(data=aggregated, x=xvar, y=yvar,
+                            errwidth=0, palette='rainbow')
+            else:
+                aggregated = df.groupby(xvar)[yvar].sum().reset_index()
+                sns.barplot(data=aggregated, x=yvar, y=xvar,
+                            errwidth=0, palette='rainbow')
+        elif plot == 'bar-plot_average':
+            if xtype == 'numeric':
+                aggregated = df.groupby(yvar)[xvar].mean().reset_index()
+                sns.barplot(data=aggregated, x=xvar, y=yvar,
+                            errwidth=0, palette='rainbow')
+            else:
+                aggregated = df.groupby(xvar)[yvar].mean().reset_index()
+                sns.barplot(data=aggregated, x=yvar, y=xvar,
+                            errwidth=0, palette='rainbow')
+        elif plot == 'density-plot':
+            if xtype == 'numeric':
+                sns.kdeplot(data=df, x=xvar, hue=yvar, fill=True,
+                            common_norm=False, palette='rainbow', alpha=.5, linewidth=1)
+            else:
+                sns.kdeplot(data=df, x=yvar, hue=xvar, fill=True,
+                            common_norm=False, palette='rainbow', alpha=.5, linewidth=1)
+        elif plot == 'count-plot':
+            if df[xvar].nunique() == 2:
+                sns.countplot(data=df, y=yvar, hue=xvar, palette='rainbow')
+            else:
+                sns.countplot(data=df, y=xvar, hue=yvar, palette='rainbow')
+        elif plot == 'scatter-plot':
+            if (zvar == 'noz') or (zvar == 'No-grouping'):
+                sns.scatterplot(data=df, x=xvar, y=yvar, palette='rainbow')
+            else:
+                sns.scatterplot(data=df, x=xvar, y=yvar,
+                                hue=zvar, style=zvar, palette='rainbow')
+        elif plot == 'line-plot':
+            if (zvar == 'noz') or (zvar == 'No-grouping'):
+                sns.lineplot(data=df, x=xvar, y=yvar, palette='rainbow')
+            else:
+                sns.lineplot(data=df, x=xvar, y=yvar,
+                             hue=zvar, palette='rainbow')
+
+        plt.tight_layout()
+        plt.savefig(buf, format='png')
+        plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
+
+        variables = ", ".join(df.columns.tolist())
+        return render_template('multivariateplot.html', xvar=xvar, yvar=yvar, zvar=zvar, plot=plot, variables=variables, plot_url=plot_url)
+    # restart session
     else:
-        sns.boxplot(x=x, y=y, hue=z, data=df)
-
-    plt.tight_layout()
-    plt.savefig(buf, format='png')
-    plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
-    return render_template('multivariateplot.html', plot_url=plot_url)
+        return redirect('/')
