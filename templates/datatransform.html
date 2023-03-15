@@ -56,6 +56,12 @@
         </div>
         {% endif %}
         <input type="submit" name="submit" value="Submit">
+
+    </form>
+    <br>
+    <form method="POST" action="/datatransform">
+        <input type="hidden" name="redirect" value="datatransform">
+        <input type="submit" value="Reset">
     </form>
     {% else %}
     <div>

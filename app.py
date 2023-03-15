@@ -273,13 +273,22 @@ def datatype():
         file_path = session.get('uploaded_data_file_path')
         # read data file
         df = pd.read_csv(file_path)
+
+        excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
+
+        df = df[excludedvar_df[excludedvar_df['exclude']
+                               == False]['column'].tolist()]
         html_table = df.head().to_html(index=False, header=True, classes='table-style')
         colnames = df.columns.tolist()
+        print(colnames)
         # read variable type file
         if request.form.get('reset') == 'datatype':
             vartype = pd.read_csv(session.get('vartype_FIXED_filepath'))
+
         else:
             vartype = pd.read_csv(session.get('vartype_filepath'))
+        vartype = vartype[vartype['column'].isin(excludedvar_df[excludedvar_df['exclude']
+                                                                == False]['column'].tolist())]
         # check if categorical variable can be converted into numerical variable
         vartype_list = list(zip(vartype['column'], vartype['class']))
         var_fixed = []
@@ -590,11 +599,15 @@ def datatransform():
             selectedvar = request.form.get('selected-var')
             vartype = vartype_df.loc[vartype_df['column']
                                      == selectedvar, 'class'].values[0]
+            formula = generate_formula(vartype)
+            # if not contain NA, remove last two method related to NA
+            if not df[selectedvar].isna().any():
+                del formula[-2:]
             # user hasnt select method
             if not request.form.get('selected-method'):
                 return render_template('datatransform.html', allformula=generate_formula('both'), variables=[selectedvar],
                                        vartype=vartype,
-                                       formula=generate_formula(vartype),
+                                       formula=formula,
                                        submit='no')
             else:
                 selectedmethod = request.form.get('selected-method')
@@ -816,14 +829,22 @@ def datatransformed():
                                      == selectedvar, 'class'].values[0]
             # user hasnt submit replace value
             if not request.form.get('replace'):
-                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, vartype=vartype, submit='no')
+                if vartype == 'numeric':
+                    avg = round(df[selectedvar].mean(), 2)
+                    return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, vartype=vartype, submit='no', avg=avg)
+                else:
+                    mode = df[selectedvar].value_counts().idxmax()
+                    return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, vartype=vartype, submit='no', mode=mode)
+
             else:
                 # convert replace value to correct data type
                 replacevalue = request.form.get('replace-value')
                 if vartype == 'numeric':
                     replacevalue = float(replacevalue)
+
                 else:
                     replacevalue = replacevalue.replace(' ', '')
+
                 # count NaN
                 count_na = df[selectedvar].isnull().sum()
                 # replace NaN
@@ -846,6 +867,7 @@ def datatransformed():
                 df = df.dropna(axis=0, how='all', subset=[selectedvar])
                 df.to_csv(session.get('uploaded_data_file_path'), index=False)
                 return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, count_na=count_na, newsize=df.shape[0], submit='yes')
+
     # restart session
     else:
         return redirect('/')
@@ -887,6 +909,13 @@ def selectmultivar():
                         includedvar = [
                             var for var in includedvar if var in vartype_df.loc[vartype_df['class'] == 'categorical', 'column'].to_list()]
                         includedvar.append('No-grouping')
+                    # x and y not both categorical
+                    elif not (xtype == 'categorical' and ytype == 'categorical'):
+                        includedvar = [
+                            var for var in includedvar if var != yvar]
+                        includedvar = [
+                            i for i in includedvar if df[i].nunique() < 5]
+                        # unique items in group no greater than 5, to avoid messy chart
                     else:
                         includedvar = ['noz']
                     return render_template('selectmultivar.html', allplots=generate_plottype('all'), xvar=[xvar], yvar=[yvar], zvar=includedvar, submit='no')
@@ -959,7 +988,13 @@ def multivariateplot():
 
         # plot
         if plot == 'box-plot':
-            if xtype == 'numeric':
+            if zvar != 'noz' and xtype == 'numeric':
+                sns.boxplot(data=df, x=xvar, y=yvar, hue=zvar,
+                            orient='h', palette='rainbow')
+            elif zvar != 'noz' and ytype == 'numeric':
+                sns.boxplot(data=df, x=yvar, y=xvar, hue=zvar,
+                            orient='h', palette='rainbow')
+            elif xtype == 'numeric':
                 sns.boxplot(data=df, x=xvar, y=yvar,
                             orient='h', palette='rainbow')
             else:

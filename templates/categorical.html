@@ -6,7 +6,8 @@
     <h1 id="page-title">Summary Statistics - Categorical Variables</h1>
     <form method="POST" action="/numeric" id="inline-form">
         <input type="hidden" name="redirect" value="numeric">
-        <input type="submit" value="Click here to view numerical variables." style="color: green">
+        <input type="submit" value="Click here to view numerical variables."
+            style="color: green;font-size: 18px; text-decoration: underline;">
     </form>
     {% if nvar > 0 %}
     <p>The table of descriptive statistics helps to understand the frequency of label in each categorical variable. The
@@ -19,7 +20,8 @@
         {% if nvar > 0 %}
         {{ df|safe }}
         {% if long_label %}
-        <p style="color: red">Note: The recommended length of label is 20 characters. Labels with more than 20
+        <p style="color: red;font-size: 12px">Note: The recommended length of label is 20 characters. Labels with more
+            than 20
             characters may be truncated in visualization.</p>
         {% endif %}
         {% endif %}

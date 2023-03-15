@@ -20,5 +20,11 @@
     <div>
         <img src='data:image/png;base64,{{plot_url}}' />
     </div>
+    <div>
+        <form method="POST" action="/selectmultivar">
+            <input type="hidden" name="redirect" value="selectmultivar">
+            <input type="submit" value="Back">
+        </form>
+    </div>
 </div>
 {% endblock %}

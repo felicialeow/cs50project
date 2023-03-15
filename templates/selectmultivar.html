@@ -100,6 +100,11 @@
             <input type="submit" value="Submit">
             {% endif %}
         </form>
+        <br>
+        <form method="POST" action="/selectmultivar">
+            <input type="hidden" name="redirect" value="selectmultivar">
+            <input type="submit" value="Reset">
+        </form>
     </div>
     {% else %}
     <!-- Selected variables and plot type -->

@@ -128,7 +128,8 @@
             <input type="hidden" name="selected-var" value={{selectedvar}}>
             <input type="hidden" name="selected-method" value={{selectedmethod}}>
             <label for="replace-value">Select value to be replaced as NaN:</label>
-            <input type="number" step="any" name="replace-value" id="replace-value" min={{range[0]}} max={{range[1]}}>
+            <input type="number" step="any" name="replace-value" id="replace-value" min={{range[0]}} max={{range[1]}}
+                autocomplete="off">
             <ul class="unstyle-list">
                 <li>
                     <input type="radio" name="replace-range" value="lower" id="lower">
@@ -166,9 +167,11 @@
             <input type="hidden" name="selected-method" value={{selectedmethod}}>
             <label for="replace-value">Please input the value to replace NaN:</label>
             {% if vartype == "numeric" %}
-            <input required type="number" step="any" name="replace-value" id="replace-value">
+            <input required type="number" step="any" name="replace-value" id="replace-value" autocomplete="off">
+            <p style="font-size: 12px;">Hint: Average: {{avg}}</p>
             {% else %}
-            <input required type="text" maxlength="20" name="replace-value" id="replace-value">
+            <input required type="text" maxlength="20" name="replace-value" id="replace-value" autocomplete="off">
+            <p style="font-size: 12px;">Hint: Mode: {{mode}}</p>
             {% endif %}
             <input type="submit" name="replace" value="Replace NaN">
         </form>
@@ -182,17 +185,36 @@
         <p>There are {{count_na}} NaN values in {{selectedvar}}. Deleting any observation/row that contains missing
             value in {{selectedvar}} will result in a smaller dataset. The new dataset will contain {{newsize}} rows.
         </p>
-        <form method="POST" action="/datatransformed">
-            <input type="hidden" name="selected-var" value={{selectedvar}}>
-            <input type="hidden" name="selected-method" value={{selectedmethod}}>
-            <label for="delete">Are you sure you want to delete rows with missing value in {{selectedvar}}?</label>
-            <input type="submit" name="delete" id="delete" value="Yes">
-        </form>
+        <div>
+            <form method="POST" action="/datatransformed" style="display: inline-block">
+
+                <input type="hidden" name="selected-var" value={{selectedvar}}>
+                <input type="hidden" name="selected-method" value={{selectedmethod}}>
+                <label for="delete">Are you sure you want to delete rows with missing value in {{selectedvar}}?</label>
+                <input type="submit" name="delete" id="delete" value="Yes">
+
+            </form>
+            <form method="POST" action="/datatransform" style="display: inline-block">
+                <input type="hidden" name="redirect" value="datatransform">
+                <input type="submit" value="No">
+
+            </form>
+        </div>
         {% else %}
         <p>{{count_na}} rows have been removed from the dataset. The current dataset has {{newsize}} rows.</p>
         {% endif %}
     </div>
 
     {% endif %}
+    <br>
+    <form method="POST" action="/datatransform">
+        <input type="hidden" name="redirect" value="datatransform">
+        <input type="submit" value="Back to Data Transformation">
+    </form>
+    <br>
+    <form method="POST" action="/datatype">
+        <input type="hidden" name="redirect" value="datatype">
+        <input type="submit" value="Back to Data Structure">
+    </form>
 </div>
 {% endblock %}
