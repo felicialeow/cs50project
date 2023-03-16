@@ -1025,7 +1025,7 @@ def multivariateplot():
         if request.form.get('switch'):
             xvar, yvar = yvar, xvar
             xtype, ytype = ytype, xtype
-            session['fig_sizex'], session['fig_sizey'] = session['fig_sizey'], session['fig_sizex']
+            # session['fig_sizex'], session['fig_sizey'] = session['fig_sizey'], session['fig_sizex']
 
         # empty canvas for plotting
         fig = plt.figure(figsize=(session['fig_sizex'], session['fig_sizey']))
@@ -1044,36 +1044,66 @@ def multivariateplot():
                 if xtype == 'numeric':
                     aggregated = df.groupby([yvar, zvar])[
                         xvar].sum().reset_index()
+                    agg_sort = aggregated.sort_values(xvar, ascending=False)
                 else:
                     aggregated = df.groupby([xvar, zvar])[
                         yvar].sum().reset_index()
-                sns.barplot(data=aggregated, x=xvar, y=yvar, hue=zvar,
-                            errwidth=0, palette='rainbow')
+                    agg_sort = aggregated.sort_values(yvar, ascending=False)
+
+                if request.form.get('sort'):
+                    sns.barplot(data=agg_sort, x=xvar, y=yvar, hue=zvar,
+                                errwidth=0, palette='rainbow')
+                else:
+                    sns.barplot(data=aggregated, x=xvar, y=yvar, hue=zvar,
+                                errwidth=0, palette='rainbow')
+
             else:
                 if xtype == 'numeric':
                     aggregated = df.groupby(yvar)[xvar].sum().reset_index()
+                    agg_sort = aggregated.sort_values(xvar, ascending=False)
                 else:
                     aggregated = df.groupby(xvar)[yvar].sum().reset_index()
-                sns.barplot(data=aggregated, x=xvar, y=yvar,
-                            errwidth=0, palette='rainbow')
+                    agg_sort = aggregated.sort_values(yvar, ascending=False)
+
+                if request.form.get('sort'):
+                    sns.barplot(data=agg_sort, x=xvar, y=yvar,
+                                errwidth=0, palette='rainbow',)
+                else:
+                    sns.barplot(data=aggregated, x=xvar, y=yvar,
+                                errwidth=0, palette='rainbow',)
 
         elif plot == 'bar-plot_average':
             if zvar != 'noz' and zvar != 'No-grouping':
                 if xtype == 'numeric':
                     aggregated = df.groupby([yvar, zvar])[
                         xvar].mean().reset_index()
+                    agg_sort = aggregated.sort_values(xvar, ascending=False)
                 else:
                     aggregated = df.groupby([xvar, zvar])[
                         yvar].mean().reset_index()
-                sns.barplot(data=aggregated, x=xvar, y=yvar, hue=zvar,
-                            errwidth=0, palette='rainbow')
+                    agg_sort = aggregated.sort_values(yvar, ascending=False)
+
+                if request.form.get('sort'):
+                    sns.barplot(data=agg_sort, x=xvar, y=yvar, hue=zvar,
+                                errwidth=0, palette='rainbow')
+                else:
+                    sns.barplot(data=aggregated, x=xvar, y=yvar, hue=zvar,
+                                errwidth=0, palette='rainbow')
+
             else:
                 if xtype == 'numeric':
                     aggregated = df.groupby(yvar)[xvar].mean().reset_index()
+                    agg_sort = aggregated.sort_values(xvar, ascending=False)
                 else:
                     aggregated = df.groupby(xvar)[yvar].mean().reset_index()
-                sns.barplot(data=aggregated, x=xvar, y=yvar,
-                            errwidth=0, palette='rainbow')
+                    agg_sort = aggregated.sort_values(yvar, ascending=False)
+
+                if request.form.get('sort'):
+                    sns.barplot(data=agg_sort, x=xvar, y=yvar,
+                                errwidth=0, palette='rainbow',)
+                else:
+                    sns.barplot(data=aggregated, x=xvar, y=yvar,
+                                errwidth=0, palette='rainbow',)
 
         elif plot == 'density-plot':
             if xtype == 'numeric':
@@ -1082,10 +1112,20 @@ def multivariateplot():
             else:
                 sns.kdeplot(data=df, x=yvar, hue=xvar, fill=True,
                             common_norm=False, palette='rainbow', alpha=.5, linewidth=1)
+
         elif plot == 'count-plot':
-            if df[xvar].nunique() == 2:
-                sns.countplot(data=df, y=yvar, hue=xvar, palette='rainbow')
+            if request.form.get('sort'):
+                # if df[xvar].nunique() == 2:
+                #     sns.countplot(
+                #         data=df, y=yvar, hue=xvar, palette='rainbow', order=df[yvar].value_counts().index)
+                # else:
+                sns.countplot(
+                    data=df, y=xvar, hue=yvar, palette='rainbow', order=df[xvar].value_counts().index)
+
             else:
+                # if df[xvar].nunique() == 2:
+                #     sns.countplot(data=df, y=yvar, hue=xvar, palette='rainbow')
+                # else:
                 sns.countplot(data=df, y=xvar, hue=yvar, palette='rainbow')
 
         elif plot == 'scatter-plot':

@@ -15,8 +15,11 @@
             <input type="submit" name="changexy" value="Expand X axis">
             <input type="submit" name="changexy" value="Expand Y axis">
             <input type="submit" name="resetsize" value="reset X Y size">
-            {%if plot != 'density-plot' and plot != 'count-plot'%}
+            {%if plot != 'density-plot'%}
             <input type="submit" name="switch" value="switch X Y">
+            {%endif%}
+            {%if plot == 'count-plot' or plot == 'bar-plot_average' or plot == 'bar-plot_sum'%}
+            <input type="submit" name="sort" value="Sort">
             {%endif%}
         </span>
     </form>
