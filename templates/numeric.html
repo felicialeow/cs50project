@@ -42,8 +42,17 @@
             {% else %}
             <input type="submit" name="reset" value="Revert Exclusions">
             {% endif %}
+
+
         </form>
     </div>
+    <div>
+        <img src='data:image/png;base64,{{plot_url}}' />
+    </div>
     {% endif %}
+
+    <!-- <form method="POST" action="/heatmap">
+        <input type="submit" name="heatmap" value="showing correlations between numerical data">
+    </form> -->
 </div>
 {% endblock %}

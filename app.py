@@ -280,7 +280,7 @@ def datatype():
                                == False]['column'].tolist()]
         html_table = df.head().to_html(index=False, header=True, classes='table-style')
         colnames = df.columns.tolist()
-        print(colnames)
+
         # read variable type file
         if request.form.get('reset') == 'datatype':
             vartype = pd.read_csv(session.get('vartype_FIXED_filepath'))
@@ -369,7 +369,15 @@ def numeric():
             # update variable type
             for col in selectedvar:
                 if vartype.loc[vartype['column'] == col, 'type'].values[0] == 'int':
-                    new_df[col] = new_df[col].astype(numpy.int64)
+                    # new_df[col] = new_df[col].astype(numpy.int64)
+                    # if create Na value in data transformation, will have this error
+                    # pandas.errors.IntCastingNaNError: Cannot convert non-finite values (NA or inf) to integer
+                    new_df[col] = pd.to_numeric(new_df[col], errors='coerce')
+                    # create a boolean mask for not NA values
+                    mask = new_df[col].notna()
+                    # convert not NA values to integer
+                    new_df.loc[mask, col] = new_df.loc[mask,
+                                                       col].astype(numpy.int64)
                 else:
                     new_df[col] = new_df[col].astype(numpy.float64)
             # summary statistics of variables
@@ -378,7 +386,20 @@ def numeric():
                 [df_desc, new_df.isnull().sum(axis=0).to_frame('NA').transpose()])
             html_table = df_desc.to_html(header=True, classes='table-style')
             nvar = df_desc.shape[1]
-            return render_template('numeric.html', nvar=nvar, df=html_table, columns=selectedvar)
+
+            # buffer to store image file
+            buf = BytesIO()
+            # empty canvas for plotting
+            fig = plt.figure(figsize=(8, 6))
+            ax = fig.add_subplot()
+
+            sns.heatmap(new_df.corr(), annot=True,
+                        linewidths=.5, cmap="Blues")
+            plt.title('Heatmap showing correlations between numerical data')
+            plt.tight_layout()
+            plt.savefig(buf, format='png')
+            plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
+            return render_template('numeric.html', nvar=nvar, df=html_table, columns=selectedvar, plot_url=plot_url)
     # restart session
     else:
         return redirect('/')
@@ -439,6 +460,7 @@ def categorical():
             # categorical variable with length of label exceeding 20
             long_label = [selectedvar[i]
                           for i in range(nvar) if str_length[i] > 20]
+
             return render_template('categorical.html', nvar=nvar, df=html_table, columns=selectedvar, long_label=long_label)
     # restart session
     else:
@@ -446,7 +468,7 @@ def categorical():
 
 
 # Select variable for univariate visualization
-@app.route('/selectvariable', methods=['GET', 'POST'])
+@ app.route('/selectvariable', methods=['GET', 'POST'])
 def selectvariable():
     # current session
     if request.method == 'POST':
@@ -497,7 +519,7 @@ def selectvariable():
 
 
 # Univariate plot
-@app.route('/univariateplot', methods=['GET', 'POST'])
+@ app.route('/univariateplot', methods=['GET', 'POST'])
 def univariateplot():
     # user redirected to univariateplot.html
     if request.method == 'POST':
@@ -581,7 +603,7 @@ def univariateplot():
 
 
 # Data Transformation
-@app.route('/datatransform', methods=['GET', 'POST'])
+@ app.route('/datatransform', methods=['GET', 'POST'])
 def datatransform():
     # current session
     if request.method == 'POST':
@@ -620,7 +642,7 @@ def datatransform():
 
 
 # Transformed Data
-@app.route('/datatransformed', methods=['GET', 'POST'])
+@ app.route('/datatransformed', methods=['GET', 'POST'])
 def datatransformed():
     # current session
     if request.method == 'POST':
@@ -874,7 +896,7 @@ def datatransformed():
 
 
 # Select variables for multivariate plot
-@app.route('/selectmultivar', methods=['GET', 'POST'])
+@ app.route('/selectmultivar', methods=['GET', 'POST'])
 def selectmultivar():
     # current session
     if request.method == 'POST':
@@ -908,6 +930,8 @@ def selectmultivar():
                             var for var in includedvar if var != yvar]
                         includedvar = [
                             var for var in includedvar if var in vartype_df.loc[vartype_df['class'] == 'categorical', 'column'].to_list()]
+                        includedvar = [
+                            i for i in includedvar if df[i].nunique() < 5]
                         includedvar.append('No-grouping')
                     # x and y not both categorical
                     elif not (xtype == 'categorical' and ytype == 'categorical'):
@@ -915,6 +939,7 @@ def selectmultivar():
                             var for var in includedvar if var != yvar]
                         includedvar = [
                             i for i in includedvar if df[i].nunique() < 5]
+                        includedvar.append('No-grouping')
                         # unique items in group no greater than 5, to avoid messy chart
                     else:
                         includedvar = ['noz']
@@ -930,6 +955,8 @@ def selectmultivar():
                         if (xtype == 'categorical') and (ytype == 'categorical'):
                             if (df[yvar].nunique() > 2) and (df[xvar].nunique() > 2):
                                 plots.remove('count-plot')
+                        if (xtype == 'numeric') and (ytype == 'categorical') and (zvar != 'No-grouping'):
+                            plots.remove('density-plot')
                         # no available plot
                         if len(plots) == 0:
                             plots = ['No-plot']
@@ -944,7 +971,7 @@ def selectmultivar():
 
 
 # Multivariate plot
-@app.route('/multivariateplot', methods=['GET', 'POST'])
+@ app.route('/multivariateplot', methods=['GET', 'POST'])
 def multivariateplot():
     # current session
     if request.method == 'POST':
@@ -988,10 +1015,10 @@ def multivariateplot():
 
         # plot
         if plot == 'box-plot':
-            if zvar != 'noz' and xtype == 'numeric':
+            if zvar != 'noz' and zvar != 'No-grouping' and xtype == 'numeric':
                 sns.boxplot(data=df, x=xvar, y=yvar, hue=zvar,
                             orient='h', palette='rainbow')
-            elif zvar != 'noz' and ytype == 'numeric':
+            elif zvar != 'noz' and zvar != 'No-grouping' and ytype == 'numeric':
                 sns.boxplot(data=df, x=yvar, y=xvar, hue=zvar,
                             orient='h', palette='rainbow')
             elif xtype == 'numeric':
@@ -1000,8 +1027,19 @@ def multivariateplot():
             else:
                 sns.boxplot(data=df, x=yvar, y=xvar,
                             orient='h', palette='rainbow')
+
         elif plot == 'bar-plot_sum':
-            if xtype == 'numeric':
+            if zvar != 'noz' and zvar != 'No-grouping' and xtype == 'numeric':
+                aggregated = df.groupby([yvar, zvar])[
+                    xvar].sum().reset_index()
+                sns.barplot(data=aggregated, x=xvar, y=yvar, hue=zvar,
+                            errwidth=0, palette='rainbow')
+            elif zvar != 'noz' and zvar != 'No-grouping' and ytype == 'numeric':
+                aggregated = df.groupby([xvar, zvar])[
+                    yvar].sum().reset_index()
+                sns.barplot(data=aggregated, x=yvar, y=xvar, hue=zvar,
+                            errwidth=0, palette='rainbow')
+            elif xtype == 'numeric':
                 aggregated = df.groupby(yvar)[xvar].sum().reset_index()
                 sns.barplot(data=aggregated, x=xvar, y=yvar,
                             errwidth=0, palette='rainbow')
@@ -1009,8 +1047,19 @@ def multivariateplot():
                 aggregated = df.groupby(xvar)[yvar].sum().reset_index()
                 sns.barplot(data=aggregated, x=yvar, y=xvar,
                             errwidth=0, palette='rainbow')
+
         elif plot == 'bar-plot_average':
-            if xtype == 'numeric':
+            if zvar != 'noz' and zvar != 'No-grouping' and xtype == 'numeric':
+                aggregated = df.groupby([yvar, zvar])[
+                    xvar].mean().reset_index()
+                sns.barplot(data=aggregated, x=xvar, y=yvar, hue=zvar,
+                            errwidth=0, palette='rainbow')
+            elif zvar != 'noz' and zvar != 'No-grouping' and ytype == 'numeric':
+                aggregated = df.groupby([xvar, zvar])[
+                    yvar].mean().reset_index()
+                sns.barplot(data=aggregated, x=yvar, y=xvar, hue=zvar,
+                            errwidth=0, palette='rainbow')
+            elif xtype == 'numeric':
                 aggregated = df.groupby(yvar)[xvar].mean().reset_index()
                 sns.barplot(data=aggregated, x=xvar, y=yvar,
                             errwidth=0, palette='rainbow')
@@ -1018,6 +1067,7 @@ def multivariateplot():
                 aggregated = df.groupby(xvar)[yvar].mean().reset_index()
                 sns.barplot(data=aggregated, x=yvar, y=xvar,
                             errwidth=0, palette='rainbow')
+
         elif plot == 'density-plot':
             if xtype == 'numeric':
                 sns.kdeplot(data=df, x=xvar, hue=yvar, fill=True,
