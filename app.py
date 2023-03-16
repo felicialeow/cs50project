@@ -444,6 +444,8 @@ def categorical():
             return render_template('categorical.html', nvar=0)
         else:
             new_df = df[selectedvar].copy()
+
+            na_row = new_df.isna().sum(axis=0).to_frame('NA').transpose()
             # update variable type
             for col in selectedvar:
                 new_df[col] = new_df[col].astype(str)
@@ -453,8 +455,10 @@ def categorical():
                 len).max() for col in selectedvar]
             df_desc = pd.concat([df_desc, pd.DataFrame(
                 {'max. length': str_length}, index=selectedvar).transpose()])
+
             df_desc = pd.concat(
-                [df_desc, new_df.isnull().sum(axis=0).to_frame('NA').transpose()])
+                [df_desc, na_row])
+
             html_table = df_desc.to_html(header=True, classes='table-style')
             nvar = df_desc.shape[1]
             # categorical variable with length of label exceeding 20
@@ -899,6 +903,9 @@ def datatransformed():
 @ app.route('/selectmultivar', methods=['GET', 'POST'])
 def selectmultivar():
     # current session
+    # reset figsize
+    session['fig_sizex'] = 7
+    session['fig_sizey'] = 4
     if request.method == 'POST':
         # read files
         df = pd.read_csv(session.get('uploaded_data_file_path'))
@@ -974,6 +981,7 @@ def selectmultivar():
 @ app.route('/multivariateplot', methods=['GET', 'POST'])
 def multivariateplot():
     # current session
+
     if request.method == 'POST':
         # read all files
         df = pd.read_csv(session.get('uploaded_data_file_path'))
@@ -1001,13 +1009,23 @@ def multivariateplot():
         # buffer to store image file
         buf = BytesIO()
 
-        # adjust figure size in x dimension
-        if request.form.get('changex'):
+        # adjust figure size in x,y dimension
+        if request.form.get('changexy'):
             sizex = session.get('fig_sizex')
-            if request.form.get('changex') == "Expand X axis":
+            sizey = session.get('fig_sizey')
+            if request.form.get('changexy') == "Expand X axis":
                 session['fig_sizex'] = sizex + 1
             else:
-                session['fig_sizex'] = sizex - 1
+                session['fig_sizey'] = sizey + 1
+
+        if request.form.get('resetsize'):
+            session['fig_sizex'] = 7
+            session['fig_sizey'] = 4
+
+        if request.form.get('switch'):
+            xvar, yvar = yvar, xvar
+            xtype, ytype = ytype, xtype
+            session['fig_sizex'], session['fig_sizey'] = session['fig_sizey'], session['fig_sizex']
 
         # empty canvas for plotting
         fig = plt.figure(figsize=(session['fig_sizex'], session['fig_sizey']))
@@ -1015,57 +1033,46 @@ def multivariateplot():
 
         # plot
         if plot == 'box-plot':
-            if zvar != 'noz' and zvar != 'No-grouping' and xtype == 'numeric':
-                sns.boxplot(data=df, x=xvar, y=yvar, hue=zvar,
-                            orient='h', palette='rainbow')
-            elif zvar != 'noz' and zvar != 'No-grouping' and ytype == 'numeric':
-                sns.boxplot(data=df, x=yvar, y=xvar, hue=zvar,
-                            orient='h', palette='rainbow')
-            elif xtype == 'numeric':
+            if zvar != 'noz' and zvar != 'No-grouping':
                 sns.boxplot(data=df, x=xvar, y=yvar,
-                            orient='h', palette='rainbow')
+                            hue=zvar, palette='rainbow')
             else:
-                sns.boxplot(data=df, x=yvar, y=xvar,
-                            orient='h', palette='rainbow')
+                sns.boxplot(data=df, x=yvar, y=xvar, palette='rainbow')
 
         elif plot == 'bar-plot_sum':
-            if zvar != 'noz' and zvar != 'No-grouping' and xtype == 'numeric':
-                aggregated = df.groupby([yvar, zvar])[
-                    xvar].sum().reset_index()
+            if zvar != 'noz' and zvar != 'No-grouping':
+                if xtype == 'numeric':
+                    aggregated = df.groupby([yvar, zvar])[
+                        xvar].sum().reset_index()
+                else:
+                    aggregated = df.groupby([xvar, zvar])[
+                        yvar].sum().reset_index()
                 sns.barplot(data=aggregated, x=xvar, y=yvar, hue=zvar,
                             errwidth=0, palette='rainbow')
-            elif zvar != 'noz' and zvar != 'No-grouping' and ytype == 'numeric':
-                aggregated = df.groupby([xvar, zvar])[
-                    yvar].sum().reset_index()
-                sns.barplot(data=aggregated, x=yvar, y=xvar, hue=zvar,
-                            errwidth=0, palette='rainbow')
-            elif xtype == 'numeric':
-                aggregated = df.groupby(yvar)[xvar].sum().reset_index()
-                sns.barplot(data=aggregated, x=xvar, y=yvar,
-                            errwidth=0, palette='rainbow')
             else:
-                aggregated = df.groupby(xvar)[yvar].sum().reset_index()
-                sns.barplot(data=aggregated, x=yvar, y=xvar,
+                if xtype == 'numeric':
+                    aggregated = df.groupby(yvar)[xvar].sum().reset_index()
+                else:
+                    aggregated = df.groupby(xvar)[yvar].sum().reset_index()
+                sns.barplot(data=aggregated, x=xvar, y=yvar,
                             errwidth=0, palette='rainbow')
 
         elif plot == 'bar-plot_average':
-            if zvar != 'noz' and zvar != 'No-grouping' and xtype == 'numeric':
-                aggregated = df.groupby([yvar, zvar])[
-                    xvar].mean().reset_index()
+            if zvar != 'noz' and zvar != 'No-grouping':
+                if xtype == 'numeric':
+                    aggregated = df.groupby([yvar, zvar])[
+                        xvar].mean().reset_index()
+                else:
+                    aggregated = df.groupby([xvar, zvar])[
+                        yvar].mean().reset_index()
                 sns.barplot(data=aggregated, x=xvar, y=yvar, hue=zvar,
                             errwidth=0, palette='rainbow')
-            elif zvar != 'noz' and zvar != 'No-grouping' and ytype == 'numeric':
-                aggregated = df.groupby([xvar, zvar])[
-                    yvar].mean().reset_index()
-                sns.barplot(data=aggregated, x=yvar, y=xvar, hue=zvar,
-                            errwidth=0, palette='rainbow')
-            elif xtype == 'numeric':
-                aggregated = df.groupby(yvar)[xvar].mean().reset_index()
-                sns.barplot(data=aggregated, x=xvar, y=yvar,
-                            errwidth=0, palette='rainbow')
             else:
-                aggregated = df.groupby(xvar)[yvar].mean().reset_index()
-                sns.barplot(data=aggregated, x=yvar, y=xvar,
+                if xtype == 'numeric':
+                    aggregated = df.groupby(yvar)[xvar].mean().reset_index()
+                else:
+                    aggregated = df.groupby(xvar)[yvar].mean().reset_index()
+                sns.barplot(data=aggregated, x=xvar, y=yvar,
                             errwidth=0, palette='rainbow')
 
         elif plot == 'density-plot':
@@ -1080,6 +1087,7 @@ def multivariateplot():
                 sns.countplot(data=df, y=yvar, hue=xvar, palette='rainbow')
             else:
                 sns.countplot(data=df, y=xvar, hue=yvar, palette='rainbow')
+
         elif plot == 'scatter-plot':
             if (zvar == 'noz') or (zvar == 'No-grouping'):
                 sns.scatterplot(data=df, x=xvar, y=yvar, palette='rainbow')
