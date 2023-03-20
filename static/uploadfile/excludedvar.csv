@@ -1,0 +1,16 @@
+column,exclude
+age,False
+workclass,False
+fnlwgt,False
+education,False
+education.num,False
+marital.status,False
+occupation,False
+relationship,False
+race,False
+sex,False
+capital.gain,False
+capital.loss,False
+hours.per.week,False
+native.country,False
+income,False
