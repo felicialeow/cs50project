@@ -142,8 +142,10 @@
             <input type="hidden" name="selected-var" value={{selectedvar}}>
             <input type="hidden" name="selected-method" value={{selectedmethod}}>
             <label for="replace-value">Select value to be replaced as NaN:</label>
+            {% if vartype == "numeric" %}
             <input type="number" step="any" name="replace-value" id="replace-value" min={{range[0]}} max={{range[1]}}
                 autocomplete="off">
+            <span class="note">Current range of values: {{range[0]}} - {{range[1]}}</span>
             <ul class="unstyle-list">
                 <li>
                     <input type="radio" name="replace-range" value="lower" id="lower">
@@ -158,7 +160,20 @@
                     <label for="upper">Specified value to maximum value</label>
                 </li>
             </ul>
+            {% else %}
+            <select required name="replace-value" id="replace-value">
+                {% for label in labels %}
+                <option value={{label}}>{{label}}</option>
+                {% endfor %}
+            </select>
+            <p class="note">Current category labels: {{labels}}</p>
+            <br>
+            {% endif %}
             <input type="submit" name="replace" value="Replace" class="btn btn-success btn-sm">
+        </form>
+        <form method="POST" action="/datatransform">
+            <input type="hidden" name="redirect" value="datatransform">
+            <input type="submit" value="Select New Variable" class="btn btn-danger btn-sm">
         </form>
         {% else %}
         {% if count_na >= 10 %}
@@ -168,8 +183,12 @@
         <p>{{count_na}} NaN values generated after data transformation.</p>
         {% endif %}
         <div>
+            {% if vartype == "numeric" %}
             <p>The box plots below compare the range of values before and after {{selectedmethod}}.</p>
             <img src='data:image/png;base64,{{plot_url}}' />
+            {% else %}
+            <p>The new category labels are: {{labels}}.</p>
+            {% endif %}
             <form method="POST" action="/datatransform">
                 <input type="hidden" name="redirect" value="datatransform">
                 <input type="submit" value="Select New Variable" class="btn btn-danger btn-sm">
@@ -193,6 +212,10 @@
             {% endif %}
             <br>
             <input type="submit" name="replace" value="Replace NaN" class="btn btn-success btn-sm">
+        </form>
+        <form method="POST" action="/datatransform">
+            <input type="hidden" name="redirect" value="datatransform">
+            <input type="submit" value="Select New Variable" class="btn btn-danger btn-sm">
         </form>
         {% else %}
         <p>{{count_na}} NaN values have been replaced by {{replacevalue}}</p>

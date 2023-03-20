@@ -73,9 +73,9 @@ def generate_formula(vartype):
         ['Min-Max_Scaler', 'Data normalization such that all values are in the range of 0 and 1', 'Numerical'],
         ['Standardization', 'Rescaling the distribution of values so that the mean is 0 and standard deviation is 1', 'Numerical'],
         ['Binning', 'Transform numerical variable into categorical variable by grouping intervals of values into categories', 'Numerical'],
-        ['Outlier-Anomaly_Treatment', 'Replacing outlier/anomaly with NaN', 'Numerical'],
         ['Renaming_Label',
             'Renaming categorical label (multiple labels can be replaced with the same label)', 'Categorical'],
+        ['Outlier-Anomaly_Treatment', 'Replacing outlier/anomaly with NaN', 'Both'],
         ['Replace_Missing_Value', 'Replacing NaN with specific value', 'Both'],
         ['Delete_Missing_Value', 'Remove row with missing value', 'Both']
     ]
@@ -794,48 +794,72 @@ def datatransformed():
                 return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod,
                                        all_labels=all_labels, submit='yes')
         elif selectedmethod == 'Outlier-Anomaly_Treatment':
-            min_val = df[selectedvar].min()
-            max_val = df[selectedvar].max()
+            vartype = vartype_df.loc[vartype_df['column']
+                                     == selectedvar, 'class'].values[0]
             # user hasnt submit replace values
             if not request.form.get('replace'):
-                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, range=(min_val, max_val), submit='no')
-            else:
-                selectedvalue = float(request.form.get('replace-value'))
-                selectedrange = request.form.get('replace-range')
-                newvar = selectedvar + '_outlier'
-                df[newvar] = df[selectedvar]
-                if selectedrange == 'lower':
-                    cond = df[newvar] <= selectedvalue
-                elif selectedrange == 'upper':
-                    cond = df[newvar] >= selectedvalue
+                if vartype == "numeric":
+                    min_val = df[selectedvar].min()
+                    max_val = df[selectedvar].max()
+                    return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, vartype=vartype, range=(min_val, max_val), submit='no')
                 else:
-                    cond = df[newvar] == selectedvalue
-                # replace value with NaN
-                df.loc[cond, newvar] = math.nan
-                new_row = {'column': [newvar], 'class': ['numeric'], 'type': [
-                    vartype_df.loc[vartype_df['column'] == selectedvar, 'type'].values[0]]}
-                write_files(df, vartype_df, excludedvar_df, new_row, newvar)
-                # count NaN
-                count_na = df[newvar].isnull().sum()
-                # create boxplot
-                buf = BytesIO()
-                fig, ax = plt.subplots(nrows=1, ncols=2)
-                bp1 = ax[0].boxplot(df[[selectedvar]].dropna(how='any'),
-                                    vert=False, patch_artist=True)
-                bp1['boxes'][0].set_facecolor('#5c729f')
-                bp1['medians'][0].set(color='black')
-                ax[0].set_yticklabels([''])
-                ax[0].set_xlabel(selectedvar)
-                bp2 = ax[1].boxplot(
-                    df[[newvar]].dropna(how='any'), vert=False, patch_artist=True)
-                bp2['boxes'][0].set_facecolor('#9f5c72')
-                bp2['medians'][0].set(color='black')
-                ax[1].set_yticklabels([''])
-                ax[1].set_xlabel(newvar)
-                plt.tight_layout()
-                plt.savefig(buf, format='png')
-                plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
-                return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, count_na=count_na, plot_url=plot_url, submit='yes')
+                    labels = df[selectedvar].unique().tolist()
+                    return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, vartype=vartype, labels=labels, submit='no')
+            else:
+                if vartype == "numeric":
+                    selectedvalue = float(request.form.get('replace-value'))
+                    selectedrange = request.form.get('replace-range')
+                    newvar = selectedvar + '_outlier'
+                    df[newvar] = df[selectedvar]
+                    if selectedrange == 'lower':
+                        cond = df[newvar] <= selectedvalue
+                    elif selectedrange == 'upper':
+                        cond = df[newvar] >= selectedvalue
+                    else:
+                        cond = df[newvar] == selectedvalue
+                    # replace value with NaN
+                    df.loc[cond, newvar] = math.nan
+                    new_row = {'column': [newvar], 'class': ['numeric'], 'type': [
+                        vartype_df.loc[vartype_df['column'] == selectedvar, 'type'].values[0]]}
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+                    # count NaN
+                    count_na = df[newvar].isnull().sum()
+                    # create boxplot
+                    buf = BytesIO()
+                    fig, ax = plt.subplots(nrows=1, ncols=2)
+                    bp1 = ax[0].boxplot(df[[selectedvar]].dropna(how='any'),
+                                        vert=False, patch_artist=True)
+                    bp1['boxes'][0].set_facecolor('#5c729f')
+                    bp1['medians'][0].set(color='black')
+                    ax[0].set_yticklabels([''])
+                    ax[0].set_xlabel(selectedvar)
+                    bp2 = ax[1].boxplot(
+                        df[[newvar]].dropna(how='any'), vert=False, patch_artist=True)
+                    bp2['boxes'][0].set_facecolor('#9f5c72')
+                    bp2['medians'][0].set(color='black')
+                    ax[1].set_yticklabels([''])
+                    ax[1].set_xlabel(newvar)
+                    plt.tight_layout()
+                    plt.savefig(buf, format='png')
+                    plot_url = base64.b64encode(
+                        buf.getbuffer()).decode("ascii")
+                    return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, vartype=vartype, count_na=count_na, plot_url=plot_url, submit='yes')
+                else:
+                    selectedvalue = request.form.get("replace-value")
+                    newvar = selectedvar + '_outlier'
+                    df[newvar] = df[selectedvar]
+                    # replace value with NaN
+                    df.loc[df[newvar] == selectedvalue, newvar] = math.nan
+                    new_row = {'column': [newvar], 'class': [
+                        'categorical'], 'type': ['categorical']}
+                    write_files(df, vartype_df, excludedvar_df,
+                                new_row, newvar)
+                    # count NaN
+                    count_na = df[newvar].isnull().sum()
+                    labels = df[newvar].unique.tolist()
+                    return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, vartype=vartype, count_na=count_na, labels=labels, submit='yes')
+
         elif selectedmethod == 'Replace_Missing_Value':
             vartype = vartype_df.loc[vartype_df['column']
                                      == selectedvar, 'class'].values[0]
