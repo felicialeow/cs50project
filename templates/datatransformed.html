@@ -112,6 +112,10 @@
             <br>
             <input type="submit" name="rename" value="Rename" class="btn btn-success btn-sm">
         </form>
+        <form method="POST" action="/datatransform">
+            <input type="hidden" name="redirect" value="datatransform">
+            <input type="submit" value="Select New Variable" class="btn btn-danger btn-sm">
+        </form>
         {% else %}
         <table border="1" class="table-style3">
             <thead>

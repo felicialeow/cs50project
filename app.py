@@ -764,7 +764,7 @@ def datatransformed():
                             'All cut points have to be listed in ascending order.')
                     return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, range=range_values, message=message, submit='no')
         elif selectedmethod == 'Renaming_Label':
-            original_labels = list(df[selectedvar].unique())
+            original_labels = df[selectedvar].dropna().unique().tolist()
             cleaned_labels = [label.replace(' ', '')
                               for label in original_labels]
             # user hasnt rename labels
@@ -803,7 +803,7 @@ def datatransformed():
                     max_val = df[selectedvar].max()
                     return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, vartype=vartype, range=(min_val, max_val), submit='no')
                 else:
-                    labels = df[selectedvar].unique().tolist()
+                    labels = df[selectedvar].dropna().unique().tolist()
                     return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, vartype=vartype, labels=labels, submit='no')
             else:
                 if vartype == "numeric":
