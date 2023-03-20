@@ -25,53 +25,55 @@
 </head>
 
 <body>
-    <div id="page-content">
+    <div class="page-content">
         <!-- Reset Button -->
         <div id="reset">
             <form method="GET" action="/">
-                <input type="submit" value="Reset" class="btn btn-danger btn-sm" data-toggle="tooltip"
+                <input type="submit" value="Reset" class="btn btn-dark btn-sm" data-toggle="tooltip"
                     data-placement="bottom" title="All changes will disappear. Data file has to be uploaded again.">
             </form>
         </div>
         <!-- Navigation Menu -->
         {% block navigation %}
-        <button type="button" data-toggle="collapse" data-target="#navigation" aria-expanded="false"
-            aria-controls="navigation" class="btn btn-dark btn-sm" id="menu">
-            Menu
-        </button>
-        <div class="collapse" id="navigation">
-            <ul id="navigation-item">
-                <li>
-                    <form method="POST" action="/datatype">
-                        <input type="hidden" name="redirect" value="datatype">
-                        <input type="submit" value="Data Structure">
-                    </form>
-                </li>
-                <li>
-                    <form method="POST" action="/numeric">
-                        <input type="hidden" name="redirect" value="numeric">
-                        <input type="submit" value="Summary Statistics">
-                    </form>
-                </li>
-                <li>
-                    <form method="POST" action="/selectvariable">
-                        <input type="hidden" name="redirect" value="selectvariable">
-                        <input type="submit" value="Univariate Visualization">
-                    </form>
-                </li>
-                <li>
-                    <form method="POST" action="/datatransform">
-                        <input type="hidden" name="redirect" value="datatransform">
-                        <input type="submit" value="Data Transformation">
-                    </form>
-                </li>
-                <li>
-                    <form method="POST" action="/selectmultivar">
-                        <input type="hidden" name="redirect" value="selectmultivar">
-                        <input type="submit" value="Multivariate Visualization">
-                    </form>
-                </li>
-            </ul>
+        <div id="menu">
+            <button type="button" data-toggle="collapse" data-target="#menu-list" aria-expanded="false"
+                aria-controls="menu-list" class="btn btn-secondary btn-sm" id="menu-btn">
+                Menu
+            </button>
+            <div class="collapse" id="menu-list">
+                <ul id="menu-item">
+                    <li>
+                        <form method="POST" action="/datatype">
+                            <input type="hidden" name="redirect" value="datatype">
+                            <input type="submit" value="Data Structure">
+                        </form>
+                    </li>
+                    <li>
+                        <form method="POST" action="/numeric">
+                            <input type="hidden" name="redirect" value="numeric">
+                            <input type="submit" value="Summary Statistics">
+                        </form>
+                    </li>
+                    <li>
+                        <form method="POST" action="/selectvariable">
+                            <input type="hidden" name="redirect" value="selectvariable">
+                            <input type="submit" value="Univariate Visualization">
+                        </form>
+                    </li>
+                    <li>
+                        <form method="POST" action="/datatransform">
+                            <input type="hidden" name="redirect" value="datatransform">
+                            <input type="submit" value="Data Transformation">
+                        </form>
+                    </li>
+                    <li>
+                        <form method="POST" action="/selectmultivar">
+                            <input type="hidden" name="redirect" value="selectmultivar">
+                            <input type="submit" value="Multivariate Visualization">
+                        </form>
+                    </li>
+                </ul>
+            </div>
         </div>
         {% endblock %}
         {% block content %}{% endblock %}

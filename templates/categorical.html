@@ -6,8 +6,7 @@
     <h1 id="page-title">Summary Statistics - Categorical Variables</h1>
     <form method="POST" action="/numeric" id="inline-form">
         <input type="hidden" name="redirect" value="numeric">
-        <input type="submit" value="Click here to view numerical variables."
-            style="color: green;font-size: 18px; text-decoration: underline;">
+        <input type="submit" value="Click here to view numerical variables">
     </form>
     {% if nvar > 0 %}
     <p>The table of descriptive statistics helps to understand the frequency of label in each categorical variable. The
@@ -20,13 +19,12 @@
         {% if nvar > 0 %}
         {{ df|safe }}
         {% if long_label %}
-        <p style="color: red;font-size: 12px">Note: The recommended length of label is 20 characters. Labels with more
+        <p class="note">Note: The recommended length of label is 20 characters. Labels with more
             than 20
             characters may be truncated in visualization.</p>
         {% endif %}
         {% endif %}
     </div>
-    <br>
     <!-- Exclude categorical variables -->
     {% if nvar > 0 %}
     <div>
@@ -42,10 +40,10 @@
                 <option value={{col}}>{{col}}</option>
                 {% endfor %}
             </select>
-            <input type="submit" name="exclude" value="Exclude">
-            <input type="submit" name="reset" value="Revert Exclusions">
+            <input type="submit" name="exclude" value="Exclude" class="btn btn-success btn-sm">
+            <input type="submit" name="reset" value="Revert Exclusions" class="btn btn-danger btn-sm">
             {% else %}
-            <input type="submit" name="reset" value="Revert Exclusions">
+            <input type="submit" name="reset" value="Revert Exclusions" class="btn btn-danger btn-sm">
             {% endif %}
         </form>
     </div>

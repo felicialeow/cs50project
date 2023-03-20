@@ -36,8 +36,14 @@
                 </select>
                 {% endif %}
             </div>
-            <input type="submit" name="submit" value="Submit">
+            <input type="submit" name="submit" value="Submit" class="btn btn-success btn-sm">
         </form>
+        {% if variables %}
+        <form method="POST" action="/selectvariable">
+            <input type="hidden" name="redirect" value="selectvariable">
+            <input type="submit" value="Reset Selection" class="btn btn-danger btn-sm">
+        </form>
+        {% endif %}
         {% else %}
         <form method="POST" action="/univariateplot">
             <div>
@@ -60,27 +66,14 @@
                 <p>Variable: <b>{{variables[0]}}</b></p>
                 <input type="hidden" name="selected-var" value={{variables[0]}}>
             </div>
-            <input type="submit" name="redirect" value="Plot">
+            <br>
+            <input type="submit" name="redirect" value="Plot" class="btn btn-success btn-sm">
+        </form>
+        <form method="POST" action="/selectvariable">
+            <input type="hidden" name="redirect" value="selectvariable">
+            <input type="submit" value="Reset Selection" class="btn btn-danger btn-sm">
         </form>
         {% endif %}
     </div>
-
-
-
-
-
-    <!--
-    <div>
-        <br>
-        <form method="GET" action="/newfeature">
-            <input type="submit" value="Go to Feature Engineering">
-        </form>
-
-        <br>
-        <form method="GET" action="/selectmultivar">
-            <input type="submit" value="Go to Multivariate Plot">
-        </form>
-    </div>
-    -->
 </div>
 {% endblock %}

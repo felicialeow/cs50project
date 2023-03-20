@@ -12,15 +12,15 @@
         <input type="hidden" name="zvar" value={{zvar}}>
         <input type="hidden" name="plot" value={{plot}}>
         <span>
-            <input type="submit" name="changexy" value="Expand X axis">
-            <input type="submit" name="changexy" value="Expand Y axis">
-            <input type="submit" name="resetsize" value="reset X Y size">
-            {%if plot != 'density-plot'%}
-            <input type="submit" name="switch" value="switch X Y">
-            {%endif%}
-            {%if plot == 'count-plot' or plot == 'bar-plot_average' or plot == 'bar-plot_sum'%}
-            <input type="submit" name="sort" value="Sort">
-            {%endif%}
+            <input type="submit" name="changexy" value="Expand X axis" class="btn btn-warning btn-sm">
+            <input type="submit" name="changexy" value="Expand Y axis" class="btn btn-warning btn-sm">
+            <input type="submit" name="resetsize" value="Reset X Y size" class="btn btn-warning btn-sm">
+            {% if plot != 'density-plot' %}
+            <input type="submit" name="switch" value="Switch X Y" class="btn btn-warning btn-sm">
+            {% endif %}
+            {% if plot == 'count-plot' or plot == 'bar-plot_average' or plot == 'bar-plot_sum' %}
+            <input type="submit" name="sort" value="Sort" class="btn btn-warning btn-sm">
+            {% endif %}
         </span>
     </form>
     <!-- Plot area -->
@@ -30,7 +30,7 @@
     <div>
         <form method="POST" action="/selectmultivar">
             <input type="hidden" name="redirect" value="selectmultivar">
-            <input type="submit" value="Back">
+            <input type="submit" value="Select New Variables" class="btn btn-danger btn-sm">
         </form>
     </div>
 </div>

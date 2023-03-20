@@ -16,9 +16,9 @@
         <table border="1" class="dataframe table-style" id="transform-table">
             <thead>
                 <tr>
-                    <td>Method</td>
-                    <td>Description</td>
-                    <td>Type</td>
+                    <th>Method</th>
+                    <th>Description</th>
+                    <th>Type</th>
                 </tr>
             </thead>
             <tbody>
@@ -31,7 +31,6 @@
                 {% endfor %}
             </tbody>
         </table>
-        <br>
     </div>
     <!-- Select variable -->
     {% if submit == "no" %}
@@ -55,17 +54,17 @@
             </select>
         </div>
         {% endif %}
-        <input type="submit" name="submit" value="Submit">
-
+        <input type="submit" name="submit" value="Submit" class="btn btn-success btn-sm">
     </form>
-    <br>
+    {% if formula %}
     <form method="POST" action="/datatransform">
         <input type="hidden" name="redirect" value="datatransform">
-        <input type="submit" value="Reset">
+        <input type="submit" value="Reset Selection" class="btn btn-danger btn-sm">
     </form>
+    {% endif %}
     {% else %}
     <div>
-        <p style="margin: 0px">Selected variable for data transformation:</p>
+        <p>Selected variable for data transformation:</p>
         <ul class="unstyle-list">
             <li>Variable: <b>{{variables[0]}}</b></li>
             <li>Method: <b>{{formula[0]}}</b></li>
@@ -75,7 +74,11 @@
             <input type="hidden" name="selected-type" value={{vartype}}>
             <input type="hidden" name="selected-method" value={{formula[0]}}>
             <input type="hidden" name="redirect" value="datatransformed">
-            <input type="submit" value="Transform">
+            <input type="submit" value="Transform" class="btn btn-success btn-sm">
+        </form>
+        <form method="POST" action="/datatransform">
+            <input type="hidden" name="redirect" value="datatransform">
+            <input type="submit" value="Reset Selection" class="btn btn-danger btn-sm">
         </form>
     </div>
     {% endif %}

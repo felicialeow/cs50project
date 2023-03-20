@@ -38,7 +38,7 @@
                     {% for col in vartype %}
                     <tr>
                         <td>
-                            <label for={{col[0]}}>{{col[0]}}</label>
+                            <label for={{col[0]}}><b>{{col[0]}}</b></label>
                         </td>
                         <td>
                             <select required name={{col[0]}} id={{col[0]}}>
@@ -57,11 +57,17 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <input type="submit" value="Submit">
+            <input type="submit" value="Submit" class="btn btn-success btn-sm">
         </form>
         <!-- form submitted -->
         {% else %}
         <table border="1" class="table-style3">
+            <thead>
+                <tr>
+                    <th>Variable</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for col in vartype %}
                 <tr>
@@ -77,11 +83,10 @@
                 {% endfor %}
             </tbody>
         </table>
-        <br>
         <form method="POST" action="/datatype">
             <input type="hidden" name="reset" value="datatype">
             <input type="hidden" name="redirect" value="datatype">
-            <input type="submit" value="Reset Variable Type">
+            <input type="submit" value="Reset Variable Type" class="btn btn-danger btn-sm">
         </form>
         {% endif %}
     </div>

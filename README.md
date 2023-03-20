@@ -1,6 +1,64 @@
-# install requirements
+## Getting Started 
 
+This is a web application designed to conduct data exploration. It involves statistical summary and visualization methods. The project is part of the CS50 Introduction to Computer Science final assessment. 
+
+### Installation 
+
+1. Get a local copy of the project repo
+```sh
+git clone https://github.com/felicialeow/cs50project.git
+```
+2. Install packages 
+```sh
 pip install -r requirements.txt
+```
+3. Run the web application 
+```sh
+python -m flask run 
+```
+
+## Usage 
+
+To begin using the data exploratory tool, upload a CSV file that contains at least 2 rows of data and 2 columns of variables. 
+There are 5 main features in the tool, it is recommended to explore each feature in order. 
+
+### 1. Data Structure 
+The first feature of the tool provides a snippet of the data set. There is an option to convert variable type from numerical to categorical or categorical to numerical (if appropriate). The variable type will affect the summary statistics and visualization method used subsequently. 
+
+_It is possible to return to change the variable type._
+
+### 2. Univariate Summary Statistics 
+
+
+univariate summary statistics 
+univariate graphics
+boxplot 
+density plot 
+bar plot 
+pie chart 
+
+handling of outliers/ anomalies 
+handling of nan value  
+data transformation
+- mathematical operations 
+- scaling 
+- normalisation
+- renaming labels
+- regrouping category
+- binning intervals 
+
+multivariate graphics
+scatter plot - grouping 
+line plot - grouping 
+box plot 
+bar plot sum
+bar plot average
+count plot 
+density plot (kde)
+
+
+who maintains and contributes 
+
 
 # web tool workflow 
 

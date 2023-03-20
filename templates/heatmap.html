@@ -1,0 +1,25 @@
+{% extends "BASE.html" %}
+
+{% block content %}
+<div>
+    <!-- Introduction -->
+    <h1 id="page-title">Multivariate Visualization</h1>
+    <!-- Plot area -->
+    {% if nvar == 0 %}
+    <form method="POST" action="/selectmultivar" id="inline-form">
+        <p>There is no numerical variable in the dataset</p>
+        <input type="hidden" name="redirect" value="selectmultivar">
+        <input type="submit" value="Click here to select other visualization method">
+    </form>
+    {% else %}
+    <p>The heatmap is used to study the correlation between all numerical variables.</p>
+    <div>
+        <img src='data:image/png;base64,{{plot_url}}' />
+    </div>
+    <form method="POST" action="/selectmultivar">
+        <input type="hidden" name="redirect" value="selectmultivar">
+        <input type="submit" value="Select New Variables" class="btn btn-danger btn-sm">
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

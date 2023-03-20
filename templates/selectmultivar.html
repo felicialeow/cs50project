@@ -30,7 +30,16 @@
                 {% endfor %}
             </tbody>
         </table>
-        <br>
+    </div>
+    <!-- Heatmap of correlation -->
+    <div>
+        <p>In addition to the visualization methods listed in the table, the correlation between all
+            numerical variables
+            found in the data set can be summarized into a heatmap.
+        </p>
+        <form method="POST" action="/heatmap" id="corrplot-form">
+            <input type="submit" name="redirect" value="Click here to view correlation plot">
+        </form>
     </div>
     <!-- Select variables for plotting -->
     <div>
@@ -91,25 +100,26 @@
             {% endif %}
             {% if plots %}
             {% if plots[0] == "No-plot" %}
-            <p style="color: red">No visualization type suitable for selected variables. Please choose other variables.
+            <p class="note">No visualization type suitable for selected variables. Please choose other variables.
             </p>
             {% else %}
-            <input type="submit" value="Submit">
+            <input type="submit" value="Submit" class="btn btn-success btn-sm">
             {% endif %}
             {% else %}
-            <input type="submit" value="Submit">
+            <input type="submit" value="Submit" class="btn btn-success btn-sm">
             {% endif %}
         </form>
-        <br>
+        {% if yvar %}
         <form method="POST" action="/selectmultivar">
             <input type="hidden" name="redirect" value="selectmultivar">
-            <input type="submit" value="Reset">
+            <input type="submit" value="Reset Selection" class="btn btn-danger btn-sm">
         </form>
+        {% endif %}
     </div>
     {% else %}
     <!-- Selected variables and plot type -->
     <div>
-        <p style="margin: 0px">Selected variables and visualization type:</p>
+        <p>Selected variables and visualization type:</p>
         <ul class="unstyle-list">
             <li>X variable: <b>{{xvar}}</b></li>
             <li>Y variable: <b>{{yvar}}</b></li>
@@ -124,7 +134,11 @@
             <input type="hidden" name="yvar" value={{yvar}}>
             <input type="hidden" name="zvar" value={{zvar}}>
             <input type="hidden" name="plot" value={{plot}}>
-            <input type="submit" name="multivariateplot" value="Plot">
+            <input type="submit" name="multivariateplot" value="Plot" class="btn btn-success btn-sm">
+        </form>
+        <form method="POST" action="/selectmultivar">
+            <input type="hidden" name="redirect" value="selectmultivar">
+            <input type="submit" value="Reset Selection" class="btn btn-danger btn-sm">
         </form>
     </div>
     {% endif %}

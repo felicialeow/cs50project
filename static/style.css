@@ -1,11 +1,18 @@
+/* general styling */
 #page-title {
     font-family: 'Ubuntu', sans-serif;
 }
 
-#page-content {
+.page-content {
     font-family: 'Roboto', sans-serif;
-    font-size: 0.8em;
-    margin: 1em 2em;
+    font-size: 1rem;
+    margin: 1rem 2rem;
+    width: 95%;
+}
+
+.page-content p {
+    margin-top: 1rem;
+    margin-bottom: 0;
 }
 
 #header2 {
@@ -14,52 +21,98 @@
     font-size: 1.5rem;
 }
 
-/* floating menu */
-#menu {
+/* floating reset button */
+#reset {
     top: 20px;
-    right: 100px;
+    right: 80px;
     float: right;
     position: absolute;
     z-index: 2;
 }
 
-#navigation {
-    top: 60px;
+#reset input[type=submit] {
+    font-size: 1rem;
+}
+
+/* floating menu */
+#menu-btn {
+    top: 36px;
+    right: 145px;
+    float: right;
+    position: absolute;
+    z-index: 2;
+    font-size: 1rem;
+}
+
+#menu-list {
+    top: 70px;
     right: 10px;
     float: right;
     position: absolute;
     z-index: 2;
-    padding-top: 10px;
     background-color: white;
     border: 1px solid #717e8b;
 }
 
-#navigation-item {
+#menu-item {
     list-style: none;
     padding-left: 0;
 }
 
-#navigation-item input[type=submit] {
+#menu-item input[type=submit] {
     border: none;
     text-decoration: none;
     background-color: white;
 }
 
-/* floating reset button */
-#reset {
-    top: 20px;
-    right: 35px;
-    float: right;
-    position: absolute;
-    z-index: 2;
+#menu-item form {
+    margin-top: 0.5rem;
 }
 
+/* message alert */
+.note {
+    font-size: 0.8rem;
+    font-style: italic;
+    color: red;
+}
+
+.success {
+    color: green;
+}
+
+.failure {
+    color: red;
+}
+
+/* general form */
+form {
+    margin-top: 1rem;
+}
+
+input[type=submit] {
+    font-size: 1rem;
+}
+
+/* upload form */
+#uploadfile input[type=submit] {
+    font-size: 1rem;
+}
+
+#uploadfile input[type=file]::-webkit-file-upload-button {
+    line-height: 1.5;
+    border-radius: 0.2rem;
+    padding: 0.25rem 0.5rem;
+    color: white;
+    border: 1px solid #6c757d;
+    background: #6c757d;
+}
 
 /* table styling */
 .table-style {
     border-collapse: collapse;
     border: 1px solid silver;
     text-align: center;
+    font-size: 0.875rem;
 }
 
 .table-style thead {
@@ -87,6 +140,10 @@
     background-color: #e2e2e2;
 }
 
+.table-style2 {
+    font-size: 0.875rem;
+}
+
 .table-style2 tbody td {
     padding: 0px 10px;
 }
@@ -94,6 +151,7 @@
 .table-style3 {
     border-collapse: collapse;
     border: 1px solid silver;
+    font-size: 0.875rem;
 }
 
 .table-style3 thead th {
@@ -111,18 +169,42 @@
 /* inline navigation */
 #inline-form input[type=submit] {
     border: none;
-    text-decoration: none;
+    text-decoration: underline;
     background-color: transparent;
     padding: 1px 0px;
+    color: green;
 }
 
-/* unstyle listing */
+/* unstyle-listing */
 .unstyle-list {
     list-style: none;
     padding-left: 0;
 }
 
+/* replace nan form */
+#replace-nan p {
+    margin-top: 0;
+}
 
-p {
-    font-size: large;
+/* delete nan form */
+.delete-nan {
+    display: inline-block
+}
+
+/* correlation plot */
+#corrplot-form {
+    margin-top: 0;
+}
+
+#corrplot-form input[type=submit] {
+    border: none;
+    text-decoration: underline;
+    background-color: transparent;
+    padding: 1px 0px;
+    color: green;
+}
+
+/* rename label form */
+#rename-label {
+    border: 0
 }

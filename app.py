@@ -369,7 +369,6 @@ def numeric():
             # update variable type
             for col in selectedvar:
                 if vartype.loc[vartype['column'] == col, 'type'].values[0] == 'int':
-                    # new_df[col] = new_df[col].astype(numpy.int64)
                     # if create Na value in data transformation, will have this error
                     # pandas.errors.IntCastingNaNError: Cannot convert non-finite values (NA or inf) to integer
                     new_df[col] = pd.to_numeric(new_df[col], errors='coerce')
@@ -386,20 +385,7 @@ def numeric():
                 [df_desc, new_df.isnull().sum(axis=0).to_frame('NA').transpose()])
             html_table = df_desc.to_html(header=True, classes='table-style')
             nvar = df_desc.shape[1]
-
-            # buffer to store image file
-            buf = BytesIO()
-            # empty canvas for plotting
-            fig = plt.figure(figsize=(8, 6))
-            ax = fig.add_subplot()
-
-            sns.heatmap(new_df.corr(), annot=True,
-                        linewidths=.5, cmap="Blues")
-            plt.title('Heatmap showing correlations between numerical data')
-            plt.tight_layout()
-            plt.savefig(buf, format='png')
-            plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
-            return render_template('numeric.html', nvar=nvar, df=html_table, columns=selectedvar, plot_url=plot_url)
+            return render_template('numeric.html', nvar=nvar, df=html_table, columns=selectedvar)
     # restart session
     else:
         return redirect('/')
@@ -903,10 +889,11 @@ def datatransformed():
 @ app.route('/selectmultivar', methods=['GET', 'POST'])
 def selectmultivar():
     # current session
-    # reset figsize
-    session['fig_sizex'] = 7
-    session['fig_sizey'] = 4
     if request.method == 'POST':
+        # reset figsize
+        session['fig_sizex'] = 7
+        session['fig_sizey'] = 4
+
         # read files
         df = pd.read_csv(session.get('uploaded_data_file_path'))
         vartype_df = pd.read_csv(session.get('vartype_filepath'))
@@ -977,11 +964,63 @@ def selectmultivar():
         return redirect('/')
 
 
+# Correlation plot
+@ app.route('/heatmap', methods=['GET', 'POST'])
+def heatmap():
+    # current session
+    if request.method == 'POST':
+        # file path
+        file_path = session.get('uploaded_data_file_path')
+        # read data file
+        df = pd.read_csv(file_path)
+        # read variable type file
+        vartype = pd.read_csv(session.get('vartype_filepath'))
+        numericvar = vartype.loc[vartype['class']
+                                 == 'numeric', 'column'].values.tolist()
+        # read excluded variable file
+        excludedvar_df = pd.read_csv(session.get('excludedvar_filepath'))
+        excludedvar = excludedvar_df.loc[excludedvar_df.exclude,
+                                         'column'].values.tolist()
+
+        selectedvar = [var for var in numericvar if var not in excludedvar]
+
+        # no numerical variables
+        if len(selectedvar) == 0:
+            return render_template('heatmap.html', nvar=0)
+        else:
+            new_df = df[selectedvar].copy()
+            # update variable type
+            for col in selectedvar:
+                if vartype.loc[vartype['column'] == col, 'type'].values[0] == 'int':
+                    new_df[col] = pd.to_numeric(new_df[col], errors='coerce')
+                    # create a boolean mask for not NA values
+                    mask = new_df[col].notna()
+                    # convert not NA values to integer
+                    new_df.loc[mask, col] = new_df.loc[mask,
+                                                       col].astype(numpy.int64)
+                else:
+                    new_df[col] = new_df[col].astype(numpy.float64)
+
+            # buffer to store image file
+            buf = BytesIO()
+            # empty canvas for plotting
+            fig = plt.figure(figsize=(8, 6))
+            ax = fig.add_subplot()
+            # heatmap
+            sns.heatmap(new_df.corr(), annot=True, linewidths=.5, cmap="Blues")
+            plt.title('Heatmap of correlations between numerical data')
+            plt.tight_layout()
+            plt.savefig(buf, format='png')
+            plot_url = base64.b64encode(buf.getbuffer()).decode("ascii")
+            return render_template('heatmap.html', nvar=len(selectedvar), plot_url=plot_url)
+    else:
+        return redirect('/')
+
+
 # Multivariate plot
 @ app.route('/multivariateplot', methods=['GET', 'POST'])
 def multivariateplot():
     # current session
-
     if request.method == 'POST':
         # read all files
         df = pd.read_csv(session.get('uploaded_data_file_path'))

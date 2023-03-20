@@ -11,13 +11,12 @@
         trends, patterns and abnormalities in the data using statistical summary and visualization methods.</p>
     <p>We have created a simple web tool that helps you in the process of EDA. Let's begin by uploading a CSV data set!
     </p>
-    <br>
     <!-- File upload -->
     <div>
         {% if success == "initial" or success == "no" %}
-        <form method="POST" action="/" enctype="multipart/form-data">
+        <form method="POST" action="/" enctype="multipart/form-data" id="uploadfile">
             <input required type="file" name="uploaded-file" accept=".csv">
-            <input type="submit" value="Upload">
+            <input type="submit" value="Upload" class="btn btn-success btn-sm">
         </form>
         {% endif %}
     </div>
@@ -29,22 +28,22 @@
         <!-- successful upload-->
         {% elif success == "yes" %}
         <div>
-            <p style="color: green">Data file successfully uploaded.</p>
+            <p class="success">Data file successfully uploaded</p>
             <form method="POST" action="/datatype">
                 <input type="hidden" name="redirect" value="datatype">
-                <input type="submit" value="Let's Begin">
+                <input type="submit" value="Let's Begin" class="btn btn-success btn-sm">
             </form>
         </div>
         <!-- unsuccessful upload -->
         {% else %}
         <div>
-            <p style="color: red">Data file upload is unsuccessful.</p>
+            <p class="failure">Data file upload is unsuccessful.</p>
             <p>Please check data structure:</p>
-            {% for error in messages %}
             <ul>
+                {% for error in messages %}
                 <li>{{error}}</li>
+                {% endfor %}
             </ul>
-            {% endfor %}
         </div>
         {% endif %}
     </div>

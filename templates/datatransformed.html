@@ -11,23 +11,31 @@
     (selectedmethod == "Standardization") %}
     {% if message %}
     <div>
-        <p style="color: red">{{message}}</p>
+        <p class="note">{{message}}</p>
     </div>
     {% else %}
     <div>
         <p>The plots below compare the distribution of data before and after {{selectedmethod}}.</p>
         <img src='data:image/png;base64,{{plot_url}}' />
+        <form method="POST" action="/datatransform">
+            <input type="hidden" name="redirect" value="datatransform">
+            <input type="submit" value="Select New Variable" class="btn btn-danger btn-sm">
+        </form>
     </div>
     {% endif %}
     {% elif (selectedmethod == "Min-Max_Scaler") %}
     <div>
         <p>The box plots below compare the range of values before and after {{selectedmethod}}.</p>
         <img src='data:image/png;base64,{{plot_url}}' />
+        <form method="POST" action="/datatransform">
+            <input type="hidden" name="redirect" value="datatransform">
+            <input type="submit" value="Select New Variable" class="btn btn-danger btn-sm">
+        </form>
     </div>
     {% elif (selectedmethod == "Binning") %}
     <div>
         {% if submit == "no" %}
-        <p style="margin: 0px">Range of values</p>
+        <p>Range of values</p>
         <ul class="unstyle-list">
             <li>Minimum: {{range[0]}}</li>
             <li>Maximum: {{range[2]}}</li>
@@ -39,7 +47,7 @@
         {% if message %}
         <ul class="unstyle-list">
             {% for error in message %}
-            <li style="color: red">{{error}}</li>
+            <li class="note">{{error}}</li>
             {% endfor %}
         </ul>
         {% endif %}
@@ -47,10 +55,10 @@
             <input type="hidden" name="selected-var" value={{selectedvar}}>
             <input type="hidden" name="selected-method" value={{selectedmethod}}>
             <input required name="cut" placeholder="eg: 1,5,10" id="cut" autocomplete="off">
-            <input type="submit" value="Submit">
+            <input type="submit" value="Submit" class="btn btn-success btn-sm">
         </form>
         {% else %}
-        <p style="margin: 0px">The newly created categorical variable from binning {{selectedvar}} has following labels:
+        <p>The newly created categorical variable from binning {{selectedvar}} has following labels:
         </p>
         <table border="1" class="dataframe table-style3">
             <thead>
@@ -72,7 +80,7 @@
             <input type="hidden" name="selected-var" value={{newvar}}>
             <input type="hidden" name="selected-method" value="Renaming_Label">
             <input type="hidden" name="binning" value="yes">
-            <input type="submit" value="Click here to rename labels" style="color: green">
+            <input type="submit" value="Click here to rename labels" class="btn btn-success btn-sm">
         </form>
         {% endif %}
     </div>
@@ -80,6 +88,7 @@
     <div>
         {% if submit == "no" %}
         <p>The category label should start with alphabets and has a maximum of 20 characters.</p>
+        <p class="note">Leave the field blank if you do not wish to rename label for a particular category.</p>
         <form method="POST" action="/datatransformed">
             <input type="hidden" name="selected-var" value={{selectedvar}}>
             <input type="hidden" name="selected-method" value={{selectedmethod}}>
@@ -94,13 +103,14 @@
                     {% for label in labels %}
                     <tr>
                         <td>{{label}}</td>
-                        <td><input type="text" name={{label}} autocomplete="off" maxlength="20"></td>
+                        <td><input type="text" name={{label}} autocomplete="off" maxlength="20"
+                                placeholder="Type new label here" id="rename-label"></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
             <br>
-            <input type="submit" name="rename" value="Rename">
+            <input type="submit" name="rename" value="Rename" class="btn btn-success btn-sm">
         </form>
         {% else %}
         <table border="1" class="table-style3">
@@ -119,6 +129,10 @@
                 {% endfor %}
             </tbody>
         </table>
+        <form method="POST" action="/datatransform">
+            <input type="hidden" name="redirect" value="datatransform">
+            <input type="submit" value="Select New Variable" class="btn btn-danger btn-sm">
+        </form>
         {% endif %}
     </div>
     {% elif (selectedmethod == "Outlier-Anomaly_Treatment") %}
@@ -137,18 +151,18 @@
                 </li>
                 <li>
                     <input type="radio" name="replace-range" value="single" id="single">
-                    <label for="single">Specified value only</label>
+                    <label for="single">Specified value only [Default]</label>
                 </li>
                 <li>
                     <input type="radio" name="replace-range" value="upper" id="upper">
                     <label for="upper">Specified value to maximum value</label>
                 </li>
             </ul>
-            <input type="submit" name="replace" value="Replace">
+            <input type="submit" name="replace" value="Replace" class="btn btn-success btn-sm">
         </form>
         {% else %}
         {% if count_na >= 10 %}
-        <p style="color: red">Please reconsider the transformation, too many NaN values (<b>{{count_na}}</b>) generated.
+        <p class="note">Please reconsider the transformation, too many NaN values (<b>{{count_na}}</b>) generated.
         </p>
         {% else %}
         <p>{{count_na}} NaN values generated after data transformation.</p>
@@ -156,27 +170,36 @@
         <div>
             <p>The box plots below compare the range of values before and after {{selectedmethod}}.</p>
             <img src='data:image/png;base64,{{plot_url}}' />
+            <form method="POST" action="/datatransform">
+                <input type="hidden" name="redirect" value="datatransform">
+                <input type="submit" value="Select New Variable" class="btn btn-danger btn-sm">
+            </form>
         </div>
         {% endif %}
     </div>
     {% elif (selectedmethod == "Replace_Missing_Value") %}
     <div>
         {% if submit == 'no' %}
-        <form method="POST" action="/datatransformed">
+        <form method="POST" action="/datatransformed" id="replace-nan">
             <input type="hidden" name="selected-var" value={{selectedvar}}>
             <input type="hidden" name="selected-method" value={{selectedmethod}}>
             <label for="replace-value">Please input the value to replace NaN:</label>
             {% if vartype == "numeric" %}
             <input required type="number" step="any" name="replace-value" id="replace-value" autocomplete="off">
-            <p style="font-size: 12px;">Hint: Average: {{avg}}</p>
+            <p class="note">Hint: Average: {{avg}}</p>
             {% else %}
             <input required type="text" maxlength="20" name="replace-value" id="replace-value" autocomplete="off">
-            <p style="font-size: 12px;">Hint: Mode: {{mode}}</p>
+            <p class="note">Hint: Mode: {{mode}}</p>
             {% endif %}
-            <input type="submit" name="replace" value="Replace NaN">
+            <br>
+            <input type="submit" name="replace" value="Replace NaN" class="btn btn-success btn-sm">
         </form>
         {% else %}
         <p>{{count_na}} NaN values have been replaced by {{replacevalue}}</p>
+        <form method="POST" action="/datatransform">
+            <input type="hidden" name="redirect" value="datatransform">
+            <input type="submit" value="Select New Variable" class="btn btn-danger btn-sm">
+        </form>
         {% endif %}
     </div>
     {% elif (selectedmethod == "Delete_Missing_Value") %}
@@ -186,35 +209,25 @@
             value in {{selectedvar}} will result in a smaller dataset. The new dataset will contain {{newsize}} rows.
         </p>
         <div>
-            <form method="POST" action="/datatransformed" style="display: inline-block">
-
+            <form method="POST" action="/datatransformed" class="delete-nan">
                 <input type="hidden" name="selected-var" value={{selectedvar}}>
                 <input type="hidden" name="selected-method" value={{selectedmethod}}>
                 <label for="delete">Are you sure you want to delete rows with missing value in {{selectedvar}}?</label>
-                <input type="submit" name="delete" id="delete" value="Yes">
-
+                <input type="submit" name="delete" id="delete" value="Yes" class="btn btn-success btn-sm">
             </form>
-            <form method="POST" action="/datatransform" style="display: inline-block">
+            <form method="POST" action="/datatransform" class="delete-nan">
                 <input type="hidden" name="redirect" value="datatransform">
-                <input type="submit" value="No">
-
+                <input type="submit" value="No" class="btn btn-danger btn-sm">
             </form>
         </div>
         {% else %}
         <p>{{count_na}} rows have been removed from the dataset. The current dataset has {{newsize}} rows.</p>
+        <form method="POST" action="/datatransform">
+            <input type="hidden" name="redirect" value="datatransform">
+            <input type="submit" value="Select New Variable" class="btn btn-danger btn-sm">
+        </form>
         {% endif %}
     </div>
-
     {% endif %}
-    <br>
-    <form method="POST" action="/datatransform">
-        <input type="hidden" name="redirect" value="datatransform">
-        <input type="submit" value="Back to Data Transformation">
-    </form>
-    <br>
-    <form method="POST" action="/datatype">
-        <input type="hidden" name="redirect" value="datatype">
-        <input type="submit" value="Back to Data Structure">
-    </form>
 </div>
 {% endblock %}
