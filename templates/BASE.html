@@ -28,7 +28,8 @@
     <div class="page-content">
         <!-- Reset Button -->
         <div id="reset">
-            <form method="GET" action="/">
+            <form method="GET" action="/"
+                onSubmit="return confirm('All changes will disappear. Do you really want to reset?');">
                 <input type="submit" value="Reset" class="btn btn-dark btn-sm" data-toggle="tooltip"
                     data-placement="bottom" title="All changes will disappear. Data file has to be uploaded again.">
             </form>

@@ -70,7 +70,7 @@ There are 6 main types of visualization method supported:
 5. count plot 
 6. density plot 
 
-_It is not advisable to conduct multivariate analysis without exploring the individually data._
+_It is not advisable to conduct multivariate analysis without exploring the individual data._
 
 ## Authors  
 The project is created and maintained by [Felicia](https://github.com/felicialeow) and [Tian](https://github.com/GTdllab).  
