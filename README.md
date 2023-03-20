@@ -73,5 +73,5 @@ There are 6 main types of visualization method supported:
 _It is not advisable to conduct multivariate analysis without exploring the individually data._
 
 ## Authors  
-The project is created and maintained by Felicia and Tian. 
+The project is created and maintained by [Felicia](https://github.com/felicialeow) and [Tian](https://github.com/GTdllab). 
 Codespace taken from [Microsoft VS Code](https://github.com/microsoft/vscode-remote-try-python)
