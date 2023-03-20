@@ -26,12 +26,12 @@ python -m flask run
 
 To begin using the data exploratory tool, upload a CSV file that contains at least 2 rows of data and 2 columns of variables. _Any file that fails the criteria will not be able to proceed with the next steps._  
   
-At any point, click the <span style="color: red"> reset </span> button on the top right corner of the page to remove all changes and re-upload data file.  
+At any point, click the reset button on the top right corner of the page to remove all changes and re-upload data file.  
 
 There are **5** main features in the tool, it is recommended to explore each feature in order.  
 
 ### 1. Data Structure 
-<p style="font-size: 0.9rem">Relevant HTML file: [datatype.html](templates/datatype.html)</p>
+Relevant HTML file: [datatype.html](templates/datatype.html)
 
 The first feature of the tool provides a snippet of the data set. The first 5 rows of the data set is presented in a table. There is an option to convert variable type from numerical to categorical or categorical to numerical (if appropriate). The variable type will affect the summary statistics and visualization method used subsequently. 
 _It is possible to return to change the variable type._  
@@ -39,7 +39,7 @@ _It is possible to return to change the variable type._
 Click the menu button on the top right corner to go to second feature - **Summary Statistics**
 
 ### 2. Univariate Summary Statistics 
-<p style="font-size: 0.9rem">Relevant HTML files: [numeric.html](templates/numeric.html) and [categorical.html](templates/categorical.html)</p>
+Relevant HTML files: [numeric.html](templates/numeric.html) and [categorical.html](templates/categorical.html)
 
 The first step into data exploration is univariate non-graphical analysis. Using several summary statistics it helps to provide a brief idea of the central tendency and spread of numerical data as well as frequency of category in categorical data. 
 
@@ -62,7 +62,7 @@ There is an option to exclude any variable that may not be of interest, e.g. res
 Click the menu button on the top right corner to go to third feature - **Univariate Visualizations**
 
 ### 3. Univariate Visualizations
-<p style="font-size: 0.9rem">Relevant HTML files: [selectvariable.html](templates/selectvariable.html) and [univariateplot.html](templates/univariateplot.html)</p>
+Relevant HTML files: [selectvariable.html](templates/selectvariable.html) and [univariateplot.html](templates/univariateplot.html)
 
 Univariate visualizations provide a more complete description of the data compared to non-graphical method. It shows the shape of distribution, central tendency and spread of data. 
 
@@ -75,7 +75,7 @@ Key things to note:
 Click the menu button on the top right corner to go to forth feature - **Data Transformation**
 
 ### 4. Data Transformation 
-<p style="font-size: 0.9rem">Relevant HTML files: [datatransform.html](templates/datatransform.html) and [datatransformed.html](templates/datatransformed.html)</p>
+Relevant HTML files: [datatransform.html](templates/datatransform.html) and [datatransformed.html](templates/datatransformed.html)
 
 Data transformation is a key process after univariate analysis. Based on the findings in univariate exploration, the raw data is altered in preparation for future analyses and application of statistical modelling.
 
@@ -98,7 +98,7 @@ It can be useful to combine several transformation method to achieve desire outc
 Click the menu button on the top right corner to go to last feature - **Multivariate Visualizations**
 
 ### 5. Multivariate Visualizations 
-<p style="font-size: 0.9rem">Relevant HTML files: [selectmultivar.html](templates/selectmultivar.html) and [multivariateplot.html](templates/multivariateplot.html)</p>
+Relevant HTML files: [selectmultivar.html](templates/selectmultivar.html) and [multivariateplot.html](templates/multivariateplot.html)
 
 The final feature of the tool is multivariate visualizations. It explores the relationship between two variables. It can compare the distribution of numerical data across different categories, understand the trend and pattern of numerical data, compute correlations among numerical data. Adding a third variable in the graphic, if applicable, shows the interaction with the other variables. 
 
