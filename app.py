@@ -559,7 +559,7 @@ def univariateplot():
         # categorical variable
         else:
             # count of items
-            count_df = var_df.value_counts().rename_axis(
+            count_df = var_df[selectedvar].value_counts().rename_axis(
                 selectedvar).reset_index(name='counts')
             color_values = get_color(count_df.shape[0])
             # pie chart
