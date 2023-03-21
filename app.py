@@ -526,9 +526,8 @@ def univariateplot():
         vartype = vartype_df.loc[vartype_df['column']
                                  == selectedvar, 'type'].values[0]
         var_df = df[[selectedvar]].copy()
-        var_df[selectedvar] = var_df[selectedvar].astype(vartype)
-        # remove missing value
         var_df = var_df.dropna(how='any')
+        var_df[selectedvar] = var_df[selectedvar].astype(vartype)
 
         # buffer to store image file
         buf = BytesIO()
