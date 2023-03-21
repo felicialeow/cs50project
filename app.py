@@ -1,6 +1,5 @@
 # Required libraries
 from flask import Flask, render_template, request, session, redirect, render_template_string
-from flask_socketio import SocketIO
 import pandas as pd
 import os
 from werkzeug.utils import secure_filename
@@ -749,8 +748,8 @@ def datatransformed():
                     write_files(df, vartype_df, excludedvar_df,
                                 new_row, newvar)
                     # label and count of each category
-                    labels = list(df[newvar].unique())
-                    counts = list(df[newvar].value_counts())
+                    labels = list(df[newvar].dropna().unique())
+                    counts = list(df[newvar].dropna().value_counts())
                     label_count = sorted(
                         list(zip(labels, counts)), key=lambda pair: pair[0])
                     return render_template('datatransformed.html', selectedvar=selectedvar, newvar=newvar, selectedmethod=selectedmethod, labels=label_count, submit='yes')
@@ -765,8 +764,9 @@ def datatransformed():
                     return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, range=range_values, message=message, submit='no')
         elif selectedmethod == 'Renaming_Label':
             original_labels = df[selectedvar].dropna().unique().tolist()
-            cleaned_labels = [label.replace(' ', '')
-                              for label in original_labels]
+            original_labels = [str(label) for label in original_labels]
+            cleaned_labels = sorted([label.replace(' ', '')
+                                     for label in original_labels])
             # user hasnt rename labels
             if not request.form.get('rename'):
                 return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, labels=cleaned_labels, submit='no')
@@ -775,7 +775,7 @@ def datatransformed():
                     newvar = selectedvar
                 else:
                     newvar = selectedvar + '_renamed'
-                df[newvar] = df[selectedvar]
+                df[newvar] = df[selectedvar].astype(str)
                 new_labels = []
                 # replace label
                 for i in range(len(original_labels)):
