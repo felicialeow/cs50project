@@ -44,6 +44,7 @@
     font-size: 1rem;
 }
 
+
 #menu-list {
     top: 70px;
     right: 10px;
@@ -58,6 +59,17 @@
     list-style: none;
     padding-left: 0;
 }
+
+
+#menu-item li a {
+    display: block;
+    padding: 5px;
+    text-decoration: none;
+    color: #333;
+    background-color: #f2f2f2;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
 
 #menu-item input[type=submit] {
     border: none;
@@ -107,6 +119,7 @@ input[type=submit] {
     background: #6c757d;
 }
 
+
 /* table styling */
 .table-style {
     border-collapse: collapse;
@@ -139,6 +152,11 @@ input[type=submit] {
 .table-style td:hover {
     background-color: #e2e2e2;
 }
+
+.na_row {
+    color: red;
+  }
+ 
 
 .table-style2 {
     font-size: 0.875rem;

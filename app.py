@@ -1,5 +1,5 @@
 # Required libraries
-from flask import Flask, render_template, request, session, redirect, render_template_string
+from flask import Flask, render_template, request, session, redirect, render_template_string, send_file
 import pandas as pd
 import os
 from werkzeug.utils import secure_filename
@@ -382,6 +382,8 @@ def numeric():
             df_desc = pd.concat(
                 [df_desc, new_df.isnull().sum(axis=0).to_frame('NA').transpose()])
             html_table = df_desc.to_html(header=True, classes='table-style')
+            html_table = html_table.replace(
+                '<th>NA</th>', '<tr class="na_row"><th>NA</th>')
             nvar = df_desc.shape[1]
             return render_template('numeric.html', nvar=nvar, df=html_table, columns=selectedvar)
     # restart session
@@ -444,6 +446,9 @@ def categorical():
                 [df_desc, na_row])
 
             html_table = df_desc.to_html(header=True, classes='table-style')
+            # make NA row red
+            html_table = html_table.replace(
+                '<th>NA</th>', '<tr class="na_row"><th>NA</th>')
             nvar = df_desc.shape[1]
             # categorical variable with length of label exceeding 20
             long_label = [selectedvar[i]
@@ -1211,3 +1216,9 @@ def multivariateplot():
     # restart session
     else:
         return redirect('/')
+
+
+@app.route('/download')
+def download():
+    path = session.get('uploaded_data_file_path')
+    return send_file(path, as_attachment=True, mimetype='csv')

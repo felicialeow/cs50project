@@ -1,8 +1,8 @@
 column,exclude
-PassengerId,True
+PassengerId,False
 Survived,False
 Pclass,False
-Name,True
+Name,False
 Sex,False
 Age,False
 SibSp,False
@@ -11,3 +11,4 @@ Ticket,False
 Fare,False
 Cabin,False
 Embarked,False
+Age_nan,False

@@ -1,84 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <title>CS50 Project</title>
     <link rel="stylesheet" href="/static/style.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Ubuntu:wght@500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto&family=Ubuntu:wght@500&display=swap"
+      rel="stylesheet"
+    />
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
-        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js"
-        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
-        crossorigin="anonymous"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+      crossorigin="anonymous"
+    ></script>
 
     <script src="../static/jquery-3.6.0.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="page-content">
-        <!-- Reset Button -->
-        <div id="reset">
-            <form method="GET" action="/"
-                onSubmit="return confirm('All changes will disappear. Do you really want to reset?');">
-                <input type="submit" value="Reset" class="btn btn-dark btn-sm" data-toggle="tooltip"
-                    data-placement="bottom" title="All changes will disappear. Data file has to be uploaded again.">
-            </form>
+      <!-- Reset Button -->
+      <div id="reset">
+        <form
+          method="GET"
+          action="/"
+          onSubmit="return confirm('All changes will disappear. Do you really want to reset?');"
+        >
+          <input
+            type="submit"
+            value="Reset"
+            class="btn btn-dark btn-sm"
+            data-toggle="tooltip"
+            data-placement="bottom"
+            title="All changes will disappear. Data file has to be uploaded again."
+          />
+        </form>
+      </div>
+      <!-- Navigation Menu -->
+      {% block navigation %}
+      <div id="menu">
+        <button
+          type="button"
+          data-toggle="collapse"
+          data-target="#menu-list"
+          aria-expanded="false"
+          aria-controls="menu-list"
+          class="btn btn-secondary btn-sm"
+          id="menu-btn"
+        >
+          Menu
+        </button>
+        <div class="collapse" id="menu-list">
+          <ul id="menu-item">
+            <li>
+              <form method="POST" action="/datatype">
+                <input type="hidden" name="redirect" value="datatype" />
+                <input type="submit" value="Data Structure" />
+              </form>
+            </li>
+            <li>
+              <form method="POST" action="/numeric">
+                <input type="hidden" name="redirect" value="numeric" />
+                <input type="submit" value="Summary Statistics" />
+              </form>
+            </li>
+            <li>
+              <form method="POST" action="/selectvariable">
+                <input type="hidden" name="redirect" value="selectvariable" />
+                <input type="submit" value="Univariate Visualization" />
+              </form>
+            </li>
+            <li>
+              <form method="POST" action="/datatransform">
+                <input type="hidden" name="redirect" value="datatransform" />
+                <input type="submit" value="Data Transformation" />
+              </form>
+            </li>
+            <li>
+              <form method="POST" action="/selectmultivar">
+                <input type="hidden" name="redirect" value="selectmultivar" />
+                <input type="submit" value="Multivariate Visualization" />
+              </form>
+            </li>
+            <li>
+              <a href="{{ url_for('download') }}"> Download Data</a>
+            </li>
+          </ul>
         </div>
-        <!-- Navigation Menu -->
-        {% block navigation %}
-        <div id="menu">
-            <button type="button" data-toggle="collapse" data-target="#menu-list" aria-expanded="false"
-                aria-controls="menu-list" class="btn btn-secondary btn-sm" id="menu-btn">
-                Menu
-            </button>
-            <div class="collapse" id="menu-list">
-                <ul id="menu-item">
-                    <li>
-                        <form method="POST" action="/datatype">
-                            <input type="hidden" name="redirect" value="datatype">
-                            <input type="submit" value="Data Structure">
-                        </form>
-                    </li>
-                    <li>
-                        <form method="POST" action="/numeric">
-                            <input type="hidden" name="redirect" value="numeric">
-                            <input type="submit" value="Summary Statistics">
-                        </form>
-                    </li>
-                    <li>
-                        <form method="POST" action="/selectvariable">
-                            <input type="hidden" name="redirect" value="selectvariable">
-                            <input type="submit" value="Univariate Visualization">
-                        </form>
-                    </li>
-                    <li>
-                        <form method="POST" action="/datatransform">
-                            <input type="hidden" name="redirect" value="datatransform">
-                            <input type="submit" value="Data Transformation">
-                        </form>
-                    </li>
-                    <li>
-                        <form method="POST" action="/selectmultivar">
-                            <input type="hidden" name="redirect" value="selectmultivar">
-                            <input type="submit" value="Multivariate Visualization">
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        {% endblock %}
-        {% block content %}{% endblock %}
+      </div>
+      {% endblock %} {% block content %}{% endblock %}
     </div>
-</body>
-
+  </body>
 </html>

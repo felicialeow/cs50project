@@ -1,7 +1,7 @@
 column,class,type
 PassengerId,numeric,int
 Survived,numeric,int
-Pclass,categorical,str
+Pclass,numeric,int
 Name,categorical,str
 Sex,categorical,str
 Age,numeric,float
@@ -11,4 +11,3 @@ Ticket,categorical,str
 Fare,numeric,float
 Cabin,categorical,str
 Embarked,categorical,str
-Age_nan,numeric,float
