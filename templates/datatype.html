@@ -61,28 +61,30 @@
         </form>
         <!-- form submitted -->
         {% else %}
-        <table border="1" class="table-style3">
-            <thead>
-                <tr>
-                    <th>Variable</th>
-                    <th>Type</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for col in vartype %}
-                <tr>
-                    <td>{{col[0]}}</td>
-                    <td>
-                        {% if col[1] == "numeric" %}
-                        Numerical
-                        {% else %}
-                        Categorical
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table3-div">
+            <table border="1" class="table-style3">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for col in vartype %}
+                    <tr>
+                        <td>{{col[0]}}</td>
+                        <td>
+                            {% if col[1] == "numeric" %}
+                            Numerical
+                            {% else %}
+                            Categorical
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         <form method="POST" action="/datatype">
             <input type="hidden" name="reset" value="datatype">
             <input type="hidden" name="redirect" value="datatype">
