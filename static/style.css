@@ -121,6 +121,10 @@ input[type=submit] {
 
 
 /* table styling */
+.table-div {
+    overflow-x: auto;
+}
+
 .table-style {
     border-collapse: collapse;
     border: 1px solid silver;
