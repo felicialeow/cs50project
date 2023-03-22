@@ -24,16 +24,16 @@ python -m flask run
 
 ## Features 
 
-To begin using the data exploratory tool, upload a CSV file that contains at least 2 rows of data and 2 columns of variables. _Any file that fails the criteria will not be able to proceed with the next steps._  
+To begin using the data exploration tool, upload a CSV file that contains at least 2 rows of data and 2 columns of variables. _Any file that fails the criteria will not proceed to the next steps._  
   
-At any point, click the reset button on the top right corner of the page to remove all changes and re-upload data file.  
+At any point, click the reset button on the top right corner of the page to remove all changes and re-upload a data file.  
 
 There are **5** main features in the tool, it is recommended to explore each feature in order.  
 
 ### 1. Data Structure 
 Relevant HTML file: [datatype.html](templates/datatype.html)
 
-The first feature of the tool provides a snippet of the data set. The first 5 rows of the data set is presented in a table. There is an option to convert variable type from numerical to categorical or categorical to numerical (if appropriate). The variable type will affect the summary statistics and visualization method used subsequently. 
+The first feature of the tool provides a snippet of the data set. The first 5 rows of the data set are display in the table. There is an option to convert variable type from numerical to categorical or categorical to numerical (if appropriate). The variable type will affect the summary statistics and visualization method used subsequently. 
 _It is possible to return to change the variable type._  
 
 Click the menu button on the top right corner to go to second feature - **Summary Statistics**
@@ -41,7 +41,7 @@ Click the menu button on the top right corner to go to second feature - **Summar
 ### 2. Univariate Summary Statistics 
 Relevant HTML files: [numeric.html](templates/numeric.html) and [categorical.html](templates/categorical.html)
 
-The first step into data exploration is univariate non-graphical analysis. Using several summary statistics it helps to provide a brief idea of the central tendency and spread of numerical data as well as frequency of category in categorical data. 
+The first step in data exploration is univariate non-graphical analysis. The summary statistics help to provide a brief idea of the central tendency and spread of numerical data; as well as the frequency of category in categorical data. 
 
 Below is the list of summary statistics available: 
 - Numerical variable
@@ -64,20 +64,20 @@ Click the menu button on the top right corner to go to third feature - **Univari
 ### 3. Univariate Visualizations
 Relevant HTML files: [selectvariable.html](templates/selectvariable.html) and [univariateplot.html](templates/univariateplot.html)
 
-Univariate visualizations provide a more complete description of the data compared to non-graphical method. It shows the shape of distribution, central tendency and spread of data. 
+Univariate visualizations provide a complete description of the data compared to non-graphical methods. They can show the shape of the distribution in addition to the central tendency and spread of data.  
 
 Numerical data are presented in **box plot** (default) or **density plot** while categorical data are presented in **bar plot** (default) and **pie chart**. 
 
 Key things to note: 
 * For numerical data, it is important to identify skewed distribution and outliers. These may pose issues for future analyses 
-* For categorical data, categories with low frequency count should be taken into consideration. It is less meaningful to analyze small group. Anomaly labels resulted from typing error should be identified and handled 
+* For categorical data, categories with low frequency should be flagged. It is less meaningful to analyze small groups. Anomaly labels resulting from typing errors should be identified and handled 
 
 Click the menu button on the top right corner to go to forth feature - **Data Transformation**
 
 ### 4. Data Transformation 
 Relevant HTML files: [datatransform.html](templates/datatransform.html) and [datatransformed.html](templates/datatransformed.html)
 
-Data transformation is a key process after univariate analysis. Based on the findings in univariate exploration, the raw data is altered in preparation for future analyses and application of statistical modelling.
+Data transformation is a critical process following univariate analysis. Based on the findings in univariate exploration, the raw data is altered in preparation for future analyses and the application of statistical modeling.
 
 There are several classes of transformation available: 
 * mathematical operations 
@@ -93,16 +93,16 @@ There are several classes of transformation available:
 * discretizing numerical variable by binning 
 * regrouping/ renaming category label 
 
-It can be useful to combine several transformation method to achieve desire outcome. 
+It is useful to combine several transformation methods to achieve the desired outcome. 
 
 Click the menu button on the top right corner to go to last feature - **Multivariate Visualizations**
 
 ### 5. Multivariate Visualizations 
 Relevant HTML files: [selectmultivar.html](templates/selectmultivar.html) and [multivariateplot.html](templates/multivariateplot.html)
 
-The final feature of the tool is multivariate visualizations. It explores the relationship between two variables. It can compare the distribution of numerical data across different categories, understand the trend and pattern of numerical data, compute correlations among numerical data. Adding a third variable in the graphic, if applicable, shows the interaction with the other variables. 
+The final feature of the tool is multivariate visualizations. It explores the relationship between two variables. It can compare the distribution of numerical data across different categories, understand the trend and pattern of numerical data, and compute correlations among numerical data. Adding a third variable in the graphic, if applicable, shows the interaction with the other variables. 
 
-There are 6 main types of visualization method supported:
+There are 6 main types of visualization methods supported:
 1. scatter plot 
 2. line plot 
 3. box plot 
