@@ -24,7 +24,7 @@ python -m flask run
 
 ## Features 
 
-To begin using the data exploration tool, upload a CSV file that contains at least 2 rows of data and 2 columns of variables. _Any file that fails the criteria will not proceed to the next steps._  
+To begin using the data exploration tool, upload a CSV file that contains at least 2 rows of data and 2 columns of variables. _Any file that fails the criteria can not proceed to the next steps. Data set with more than 50 columns will only keep the first 50 columns._  
   
 At any point, click the reset button on the top right corner of the page to remove all changes and re-upload a data file.  
 
