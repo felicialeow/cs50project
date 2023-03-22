@@ -159,8 +159,12 @@ input[type=submit] {
 
 .na_row {
     color: red;
-  }
- 
+}
+
+.table2-div {
+    max-height: 600px;
+    overflow-y: auto;
+}
 
 .table-style2 {
     font-size: 0.875rem;
