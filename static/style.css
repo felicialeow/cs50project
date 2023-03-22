@@ -170,6 +170,11 @@ input[type=submit] {
     padding: 0px 10px;
 }
 
+.table3-div {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
 .table-style3 {
     border-collapse: collapse;
     border: 1px solid silver;
