@@ -63,12 +63,12 @@
 
 #menu-item li a {
     display: block;
-    padding: 5px;
+    padding: 0px 5px;
     text-decoration: none;
-    color: #333;
-    background-color: #f2f2f2;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    color: red;
+    background-color: white;
+    line-height: 1.5;
+    margin-top: 0.5rem;
   }
 
 #menu-item input[type=submit] {
