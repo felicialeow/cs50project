@@ -208,6 +208,13 @@ def index():
 
             # valid file
             if error == 0:
+                # check number of columns (max 50 columns) 
+                if df.shape[1] > 50:
+                    message = 'Note: Data set contains ' + str(df.shape[1]) + ' columns, only first 50 columns will be used.'
+                    df = df.iloc[:, :50]
+                    df.to_csv(session.get('uploaded_data_file_path'), index=False)
+                else:
+                    message = ''
                 # determine variable type
                 colnames = df.columns.tolist()
                 colclass = []
@@ -244,7 +251,7 @@ def index():
                 # store file path of excluded variables in session
                 session['excludedvar_filepath'] = os.path.join(
                     app.config['UPLOAD_FOLDER'], 'excludedvar.csv')
-                return render_template('index.html', success="yes")
+                return render_template('index.html', success="yes", message=message)
             # remove invalid data upload
             else:
                 clear_dir()
