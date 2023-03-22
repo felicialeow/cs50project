@@ -792,8 +792,8 @@ def datatransformed():
         elif selectedmethod == 'Renaming_Label':
             original_labels = df[selectedvar].dropna().unique().tolist()
             original_labels = [str(label) for label in original_labels]
-            cleaned_labels = sorted([label.replace(' ', '')
-                                     for label in original_labels])
+            cleaned_labels = [label.replace(' ', '')
+                                     for label in original_labels]
             all_labels = sorted(
                 list(zip(original_labels, cleaned_labels)), key=lambda pair: pair[1])
             cleaned_labels = [pair[1] for pair in all_labels]
