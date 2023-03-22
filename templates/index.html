@@ -28,7 +28,11 @@
         <!-- successful upload-->
         {% elif success == "yes" %}
         <div>
+            {% if message == "" %}
             <p class="success">Data file successfully uploaded</p>
+            {% else %}
+            <p class="note">{{message}}</p>
+            {% endif %}
             <form method="POST" action="/datatype">
                 <input type="hidden" name="redirect" value="datatype">
                 <input type="submit" value="Let's Begin" class="btn btn-success btn-sm">
