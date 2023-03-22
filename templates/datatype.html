@@ -33,30 +33,32 @@
         <!-- initial page -->
         {% if submit == "no" %}
         <form method="POST" action="/datatype">
-            <table class="table-style2">
-                <tbody>
-                    {% for col in vartype %}
-                    <tr>
-                        <td>
-                            <label for={{col[0]}}><b>{{col[0]}}</b></label>
-                        </td>
-                        <td>
-                            <select required name={{col[0]}} id={{col[0]}}>
-                                {% if col[1] == "numeric" %}
-                                <option value="numeric">Numerical</option>
-                                <option value="categorical">Categorical</option>
-                                {% elif (col[1] == "categorical") and (col[2]) %}
-                                <option value="categorical">Categorical</option>
-                                {% else %}
-                                <option value="categorical">Categorical</option>
-                                <option value="numeric">Numerical</option>
-                                {% endif %}
-                            </select>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table2-div">
+                <table class="table-style2">
+                    <tbody>
+                        {% for col in vartype %}
+                        <tr>
+                            <td>
+                                <label for={{col[0]}}><b>{{col[0]}}</b></label>
+                            </td>
+                            <td>
+                                <select required name={{col[0]}} id={{col[0]}}>
+                                    {% if col[1] == "numeric" %}
+                                    <option value="numeric">Numerical</option>
+                                    <option value="categorical">Categorical</option>
+                                    {% elif (col[1] == "categorical") and (col[2]) %}
+                                    <option value="categorical">Categorical</option>
+                                    {% else %}
+                                    <option value="categorical">Categorical</option>
+                                    <option value="numeric">Numerical</option>
+                                    {% endif %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             <input type="submit" value="Submit" class="btn btn-success btn-sm">
         </form>
         <!-- form submitted -->
