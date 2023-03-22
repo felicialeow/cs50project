@@ -794,6 +794,10 @@ def datatransformed():
             original_labels = [str(label) for label in original_labels]
             cleaned_labels = sorted([label.replace(' ', '')
                                      for label in original_labels])
+            all_labels = sorted(
+                list(zip(original_labels, cleaned_labels)), key=lambda pair: pair[1])
+            cleaned_labels = [pair[1] for pair in all_labels]
+            original_labels = [pair[0] for pair in all_labels]
             # user hasnt rename labels
             if not request.form.get('rename'):
                 return render_template('datatransformed.html', selectedvar=selectedvar, selectedmethod=selectedmethod, labels=cleaned_labels, submit='no')
