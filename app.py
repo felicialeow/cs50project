@@ -212,7 +212,6 @@ def index():
                 if df.shape[1] > 50:
                     message = 'Note: Data set contains ' + str(df.shape[1]) + ' columns, only first 50 columns will be used.'
                     df = df.iloc[:, :50]
-                    df.to_csv(session.get('uploaded_data_file_path'), index=False)
                 else:
                     message = ''
                 # determine variable type
@@ -229,6 +228,12 @@ def index():
                     else:
                         colclass.append('categorical')
                         coltype.append('str')
+                        # strip whitespace
+                        df[col] = df[col].str.strip()
+                        # replace blank text with NaN 
+                        df[col] = df[col].replace('', math.nan)
+                # update changes in data set
+                df.to_csv(session.get('uploaded_data_file_path'), index=False)
                 # save variable type to database
                 vartype = pd.DataFrame(
                     {'column': colnames, 'class': colclass, 'type': coltype})
