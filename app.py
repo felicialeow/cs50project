@@ -12,6 +12,7 @@ from scipy.stats import gaussian_kde
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import seaborn as sns
 import math
+import re
 
 
 # Flask configuration
@@ -394,8 +395,14 @@ def numeric():
             df_desc = pd.concat(
                 [df_desc, new_df.isnull().sum(axis=0).to_frame('NA').transpose()])
             html_table = df_desc.to_html(header=True, classes='table-style')
-            html_table = html_table.replace(
-                '<th>NA</th>', '<tr class="na_row"><th>NA</th>')
+            # NA row - color cell with missing value > 0 
+            nan_row = html_table[html_table.find("<th>NA</th>\n"):]
+            nan_row_c = nan_row.split("\n")
+            nan_row_c = [col.replace("<td>", "<td class='na_cell'>") if re.search(
+                "[1-9]", col) else col for col in nan_row_c]
+            nan_row_c = "\n".join(nan_row_c)
+            html_table = html_table[:html_table.find(
+                "<th>NA</th>\n")] + nan_row_c
             nvar = df_desc.shape[1]
             return render_template('numeric.html', nvar=nvar, df=html_table, columns=selectedvar)
     # restart session
@@ -458,9 +465,14 @@ def categorical():
                 [df_desc, na_row])
 
             html_table = df_desc.to_html(header=True, classes='table-style')
-            # make NA row red
-            html_table = html_table.replace(
-                '<th>NA</th>', '<tr class="na_row"><th>NA</th>')
+            # NA row - color cell with missing value > 0 
+            nan_row = html_table[html_table.find("<th>NA</th>\n"):]
+            nan_row_c = nan_row.split("\n")
+            nan_row_c = [col.replace("<td>", "<td class='na_cell'>") if re.search(
+                "[1-9]", col) else col for col in nan_row_c]
+            nan_row_c = "\n".join(nan_row_c)
+            html_table = html_table[:html_table.find(
+                "<th>NA</th>\n")] + nan_row_c
             nvar = df_desc.shape[1]
             # categorical variable with length of label exceeding 20
             long_label = [selectedvar[i]
