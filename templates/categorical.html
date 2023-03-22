@@ -15,7 +15,7 @@
     <p>There is no categorical variables in the dataset.</p>
     {% endif %}
     <!-- Table of summary statistics -->
-    <div>
+    <div class="table-div">
         {% if nvar > 0 %}
         {{ df|safe }}
         {% if long_label %}
