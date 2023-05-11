@@ -4,7 +4,7 @@
 
 This is a web application designed to conduct quick data exploration. It involves summary statistics and visualization methods. The project is part of the CS50 Introduction to Computer Science final assessment.  
 
-A video has been created to demonstrate the usage of data exploration tool. <URL HERE>
+A video has been created to demonstrate the usage of data exploration tool. <https://youtu.be/R2hOriwbPmc>
 
 
 ## Installation 
